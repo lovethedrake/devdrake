@@ -1,0 +1,59 @@
+version: v1.0.0
+
+baseGoContainer: &baseGoContainer
+  name: go
+  image: quay.io/deis/lightweight-docker-go:v0.7.0
+  sourceMountPath: /go/src/github.com/lovethedrake/drakecore
+  workingDirectory: /go/src/github.com/lovethedrake/drakecore
+  tty: true
+
+jobs:
+
+################################################################################
+# Utility jobs                                                                 #
+################################################################################
+
+  dep:
+    containers:
+    - <<: *baseGoContainer
+      command: dep ensure -v
+
+################################################################################
+# Test jobs                                                                    #
+################################################################################
+
+  verify-vendored-code:
+    containers:
+    - <<: *baseGoContainer
+      command: dep check
+
+  test:
+    containers:
+    - <<: *baseGoContainer
+      command: go test -timeout 30s -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+  lint:
+    containers:
+    - <<: *baseGoContainer
+      command: golangci-lint run ./...
+
+################################################################################
+# Pipelines                                                                    #
+################################################################################
+
+pipelines:
+
+################################################################################
+# CI pipelines                                                                 #
+################################################################################
+
+  ci:
+    criteria:
+      branches:
+        only:
+        - /.*/
+    stages:
+    - jobs:
+      - lint
+      - verify-vendored-code
+      - test

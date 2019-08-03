@@ -1,0 +1,170 @@
+version: v1.0.0
+
+baseGoContainer: &baseGoContainer
+  name: go
+  image: quay.io/deis/lightweight-docker-go:v0.7.0
+  sourceMountPath: /go/src/github.com/lovethedrake/devdrake
+  workingDirectory: /go/src/github.com/lovethedrake/devdrake
+  tty: true
+
+baseDemoContainer: &baseDemoContainer
+  name: demo
+  image: debian:stretch
+
+jobs:
+
+################################################################################
+# Demo jobs                                                                    #
+################################################################################
+
+  env:
+    containers:
+    - name: env
+      image: debian:stretch
+      sourceMountPath: /go/src/github.com/lovethedrake/devdrake
+      workingDirectory: /go/src/github.com/lovethedrake/devdrake
+      command: scripts/demo/env.sh
+
+  foo:
+    containers:
+    - <<: *baseDemoContainer
+      command: echo foo
+
+  bar:
+    containers:
+    - <<: *baseDemoContainer
+      command: echo bar
+
+  fail:
+    containers:
+    - <<: *baseDemoContainer
+      command: "false"
+
+  # This job demonstrates two containers networked together.
+  # This doesn't work in Brigade / k8s yet because job / pod completion is based
+  # on ALL containers having exited and the redis sidecar never will. There's
+  # a KEP open to fix this.
+  redis:
+    containers:
+    - name: redis
+      image: redis:latest
+    - name: redis-cli
+      image: redis:latest
+      sourceMountPath: /demo
+      workingDirectory: /demo
+      command: scripts/demo/redis.sh
+
+################################################################################
+# Utility jobs                                                                 #
+################################################################################
+
+  dep:
+    containers:
+    - <<: *baseGoContainer
+      command: dep ensure -v
+
+################################################################################
+# Test jobs                                                                    #
+################################################################################
+
+  verify-vendored-code:
+    containers:
+    - <<: *baseGoContainer
+      command: dep check
+
+  test-unit:
+    containers:
+    - <<: *baseGoContainer
+      command: go test -timeout 30s -race -coverprofile=coverage.txt -covermode=atomic ./cmd/... ./pkg/...
+
+  lint:
+    containers:
+    - <<: *baseGoContainer
+      command: golangci-lint run ./cmd/... ./pkg/...
+
+################################################################################
+# Build / publish jobs                                                         #
+################################################################################
+
+  clean:
+    containers:
+    - <<: *baseGoContainer
+      command: rm -rf bin/
+
+  build-linux-amd64:
+    containers:
+    - <<: *baseGoContainer
+      environment:
+      - CGO_ENABLED=0
+      command: scripts/build.sh linux amd64
+
+  build-darwin-amd64:
+    containers:
+    - <<: *baseGoContainer
+      environment:
+      - CGO_ENABLED=0
+      command: scripts/build.sh darwin amd64
+
+  build-windows-amd64:
+    containers:
+    - <<: *baseGoContainer
+      environment:
+      - CGO_ENABLED=0
+      command: scripts/build.sh windows amd64
+
+  publish-binaries:
+    containers:
+    - <<: *baseGoContainer
+      command: scripts/publish.sh
+
+################################################################################
+# Pipelines                                                                    #
+################################################################################
+
+pipelines:
+
+################################################################################
+# Demo pipelines                                                               #
+################################################################################
+
+  foobar:
+    stages:
+    - jobs:
+      - foo
+      - bar
+
+################################################################################
+# CI pipeline                                                                 #
+################################################################################
+
+  ci:
+    criteria:
+      branches:
+        only:
+        - /.*/
+    stages:
+    - jobs:
+      - lint
+      - verify-vendored-code
+      - test-unit
+    - jobs:
+      - build-linux-amd64
+      - build-darwin-amd64
+      - build-windows-amd64
+
+################################################################################
+# Release pipeline                                                             #
+################################################################################
+
+  release:
+    criteria:
+      tags:
+        only:
+        - /v[0-9]+(\.[0-9]+)*(\-.+)?/
+    stages:
+    - jobs:
+      - build-linux-amd64
+      - build-darwin-amd64
+      - build-windows-amd64
+    - jobs:
+      - publish-binaries
