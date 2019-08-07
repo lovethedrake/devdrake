@@ -25,6 +25,19 @@ func main() {
 	}
 	app.Commands = []cli.Command{
 		{
+			Name:      "list",
+			Aliases:   []string{"ls"},
+			Usage:     "list all drake jobs or pipelines",
+			UsageText: "drake list [options]",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  flagsPipeline,
+					Usage: "list pipelines instead of jobs",
+				},
+			},
+			Action: list,
+		},
+		{
 			Name:      "run",
 			Usage:     "execute drake jobs(s) or pipeline(s)",
 			UsageText: "drake run name... [options]",
