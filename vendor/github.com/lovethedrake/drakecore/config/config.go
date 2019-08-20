@@ -63,11 +63,7 @@ func NewConfigFromFile(configFilePath string) (Config, error) {
 	for pipelineName, pipeline := range config.Pipelinez {
 		pipeline.name = pipelineName
 		if err := pipeline.resolveJobs(config.Jobz); err != nil {
-			return nil, errors.Wrapf(
-				err,
-				"error resolving jobs for pipeline \"%s\"",
-				pipeline.name,
-			)
+			return nil, err
 		}
 		config.pipelines[i] = pipeline
 		i++
@@ -81,7 +77,7 @@ func NewConfigFromFile(configFilePath string) (Config, error) {
 
 func (c *config) AllJobs() []Job {
 	// We don't want any alterations a caller may make to the slice we return to
-	// affect config's own jobs slice, which we'd like to treat as immutable. so
+	// affect config's own jobs slice, which we'd like to treat as immutable, so
 	// we return a COPY of that slice.
 	jobs := make([]Job, len(c.jobs))
 	copy(jobs, c.jobs)
@@ -103,7 +99,7 @@ func (c *config) Jobs(jobNames []string) ([]Job, error) {
 
 func (c *config) AllPipelines() []Pipeline {
 	// We don't want any alterations a caller may make to the slice we return to
-	// affect config's own pipelines slice, which we'd like to treat as immutable.
+	// affect config's own pipelines slice, which we'd like to treat as immutable,
 	// so we return a COPY of that slice.
 	pipelines := make([]Pipeline, len(c.pipelines))
 	copy(pipelines, c.pipelines)

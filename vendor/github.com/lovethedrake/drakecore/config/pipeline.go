@@ -4,39 +4,35 @@ import "github.com/pkg/errors"
 
 // Pipeline is a public interface for pipeline configuration.
 type Pipeline interface {
+	// Name returns the pipeline's name
 	Name() string
+	// Matches tages branch and/or tag names as criteria to determine if the
+	// pipeline is eligible for execution
 	Matches(branch, tag string) (bool, error)
-	Jobs() [][]Job
+	// Jobs returns all the jobs that comprise the pipeline
+	Jobs() []PipelineJob
 }
 
 type pipeline struct {
-	name     string
-	Selector *pipelineSelector `json:"criteria"`
-	Stages   []*pipelineStage  `json:"stages"`
-	jobs     [][]*job
-}
-
-type pipelineStage struct {
-	Jobs []string `json:"jobs"`
+	name         string
+	Selector     *pipelineSelector `json:"criteria"`
+	PipelineJobs []*pipelineJob    `json:"jobs"`
 }
 
 func (p *pipeline) resolveJobs(jobs map[string]*job) error {
-	p.jobs = make([][]*job, len(p.Stages))
-	for i, stage := range p.Stages {
-		p.jobs[i] = make([]*job, len(stage.Jobs))
-		for j, jobName := range stage.Jobs {
-			job, ok := jobs[jobName]
-			if !ok {
-				return errors.Errorf(
-					"pipeline \"%s\" stage %d (zero-indexed) depends on undefined "+
-						"job \"%s\"",
-					p.name,
-					i,
-					jobName,
-				)
-			}
-			p.jobs[i][j] = job
+	pipelineJobs := map[string]*pipelineJob{}
+	for _, plj := range p.PipelineJobs {
+		if _, ok := pipelineJobs[plj.Name]; ok {
+			return errors.Errorf(
+				"pipeline %q contains the job %q more than once; this is not permitted",
+				p.name,
+				plj.Name,
+			)
 		}
+		if err := plj.resolveJobAndDependencies(jobs, pipelineJobs); err != nil {
+			return errors.Wrapf(err, "error resolving jobs for pipeline %q", p.name)
+		}
+		pipelineJobs[plj.Name] = plj
 	}
 	return nil
 }
@@ -50,16 +46,13 @@ func (p *pipeline) Matches(branch, tag string) (bool, error) {
 	if p.Selector == nil {
 		return false, nil
 	}
-	return p.Selector.Matches(branch, tag)
+	return p.Selector.matches(branch, tag)
 }
 
-func (p *pipeline) Jobs() [][]Job {
-	jobsIfaces := make([][]Job, len(p.jobs))
-	for i, jobs := range p.jobs {
-		jobsIfaces[i] = make([]Job, len(jobs))
-		for j, job := range jobs {
-			jobsIfaces[i][j] = job
-		}
+func (p *pipeline) Jobs() []PipelineJob {
+	pipelineJobsIfaces := make([]PipelineJob, len(p.PipelineJobs))
+	for i := range p.PipelineJobs {
+		pipelineJobsIfaces[i] = p.PipelineJobs[i]
 	}
-	return jobsIfaces
+	return pipelineJobsIfaces
 }

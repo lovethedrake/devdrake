@@ -52,8 +52,7 @@ pipelines:
       branches:
         only:
         - /.*/
-    stages:
-    - jobs:
-      - lint
-      - verify-vendored-code
-      - test
+    jobs:
+    - name: lint
+    - name: verify-vendored-code
+    - name: test

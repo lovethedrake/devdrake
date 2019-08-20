@@ -23,3 +23,7 @@
 [[constraint]]
   name = "github.com/docker/docker"
   revision = "13771fede318028d67e5d521bb97bcb54a4aaec5"
+
+[[constraint]]
+  name = "github.com/lovethedrake/drakecore"
+  version = "v0.2.0"

@@ -17,23 +17,23 @@ type refSelector struct {
 	BlacklistedRefs []string `json:"ignore"`
 }
 
-func (p *pipelineSelector) Matches(branch, tag string) (bool, error) {
+func (p *pipelineSelector) matches(branch, tag string) (bool, error) {
 	// If a tag is specified, we match purely on the basis of the tag. This means
 	// "" is not a valid tag.
 	if tag != "" {
 		if p.TagSelector == nil {
 			return false, nil
 		}
-		return p.TagSelector.Matches(tag)
+		return p.TagSelector.matches(tag)
 	}
 	// Fall back to matching on the branch. "" is considered a valid branch.
 	if p.BranchSelector == nil {
 		return false, nil
 	}
-	return p.BranchSelector.Matches(branch)
+	return p.BranchSelector.matches(branch)
 }
 
-func (r *refSelector) Matches(ref string) (bool, error) {
+func (r *refSelector) matches(ref string) (bool, error) {
 	var matchesWhitelist bool
 	if len(r.WhitelistedRefs) == 0 {
 		matchesWhitelist = true
