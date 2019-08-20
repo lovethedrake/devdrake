@@ -128,8 +128,10 @@ pipelines:
 ################################################################################
 
   foobar:
-    stages:
-    - jobs:
+    jobs:
+    - name: foo
+    - name: bar
+      dependencies:
       - foo
       - bar
 
@@ -142,15 +144,25 @@ pipelines:
       branches:
         only:
         - /.*/
-    stages:
-    - jobs:
+    jobs:
+    - name: lint
+    - name: verify-vendored-code
+    - name: test-unit
+    - name: build-linux-amd64
+      dependencies:
       - lint
       - verify-vendored-code
       - test-unit
-    - jobs:
-      - build-linux-amd64
-      - build-darwin-amd64
-      - build-windows-amd64
+    - name: build-darwin-amd64
+      dependencies:
+      - lint
+      - verify-vendored-code
+      - test-unit
+    - name: build-windows-amd64
+      dependencies:
+      - lint
+      - verify-vendored-code
+      - test-unit
 
 ################################################################################
 # Release pipeline                                                             #
@@ -161,10 +173,12 @@ pipelines:
       tags:
         only:
         - /v[0-9]+(\.[0-9]+)*(\-.+)?/
-    stages:
-    - jobs:
+    jobs:
+    - name: build-linux-amd64
+    - name: build-darwin-amd64
+    - name: build-windows-amd64
+    - name: publish-binaries
+      dependencies:
       - build-linux-amd64
       - build-darwin-amd64
       - build-windows-amd64
-    - jobs:
-      - publish-binaries
