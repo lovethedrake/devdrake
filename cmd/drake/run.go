@@ -1,12 +1,12 @@
 package main
 
 import (
-	"os"
 	"path/filepath"
 
 	docker "github.com/docker/docker/client"
 	drakeDocker "github.com/lovethedrake/devdrake/pkg/docker"
 	"github.com/lovethedrake/devdrake/pkg/signals"
+	"github.com/lovethedrake/drakecore/config"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )
@@ -17,7 +17,7 @@ func run(c *cli.Context) error {
 	configFile := c.GlobalString(flagFile)
 	secretsFile := c.String(flagSecretsFile)
 	debugOnly := c.Bool(flagDebug)
-	concurrencyEnabled := c.Bool(flagConcurrently)
+	maxConcurrency := c.Int(flagConcurrency)
 	absConfigFilePath, err := filepath.Abs(configFile)
 	if err != nil {
 		return err
@@ -27,41 +27,44 @@ func run(c *cli.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "error building Docker client")
 	}
-	executor := drakeDocker.NewExecutor(dockerClient)
-	executePipelines := c.Bool(flagPipeline)
-	if executePipelines {
-		if len(c.Args()) == 0 {
-			return errors.New("no pipelines were specified for execution")
-		}
-		// TODO: Should pass the stream that we want output to go to-- stdout
-		err = executor.ExecutePipelines(
-			ctx,
-			configFile,
-			secretsFile,
-			sourcePath,
-			c.Args(),
-			debugOnly,
-			concurrencyEnabled,
-		)
-	} else {
-		if len(c.Args()) == 0 {
-			return errors.New("no jobs were specified for execution")
-		}
-		// TODO: Should pass the stream that we want output to go to-- stdout
-		err = executor.ExecuteJobs(
-			ctx,
-			configFile,
-			secretsFile,
-			sourcePath,
-			c.Args(),
-			debugOnly,
-			concurrencyEnabled,
-		)
+
+	cfg, err := config.NewConfigFromFile(configFile)
+	if err != nil {
+		return err
 	}
-	select {
-	case <-ctx.Done():
-		os.Exit(1)
-	default:
+	secrets, err := secretsFromFile(secretsFile)
+	if err != nil {
+		return err
 	}
-	return err
+
+	// TODO: Should pass the stream that we want output to go to-- stdout
+	executor := drakeDocker.NewExecutor(sourcePath, dockerClient, debugOnly)
+	if c.Bool(flagPipeline) {
+		if len(c.Args()) == 0 {
+			return errors.New("no pipeline was specified for execution")
+		}
+		if len(c.Args()) > 1 {
+			return errors.New("only one pipeline may be executed at a time")
+		}
+		var pipelines []config.Pipeline
+		pipelines, err = cfg.Pipelines(c.Args())
+		if err != nil {
+			return err
+		}
+		return executor.ExecutePipeline(ctx, pipelines[0], secrets, maxConcurrency)
+	}
+	if len(c.Args()) == 0 {
+		return errors.New("no jobs were specified for execution")
+	}
+	var jobs []config.Job
+	jobs, err = cfg.Jobs(c.Args())
+	if err != nil {
+		return err
+	}
+	return executor.ExecutePipeline(
+		ctx,
+		drakeDocker.NewAdHocPipeline(jobs),
+		secrets,
+		maxConcurrency,
+	)
 }

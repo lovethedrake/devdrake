@@ -50,9 +50,10 @@ func main() {
 					Name:  flagsDebug,
 					Usage: "display debug info",
 				},
-				cli.BoolFlag{
-					Name:  flagsConcurrently,
-					Usage: "enable concurrent job execution",
+				cli.IntFlag{
+					Name:  flagsConcurrency,
+					Usage: "maximum number of jobs to execute at once",
+					Value: 1,
 				},
 				cli.StringFlag{
 					Name:  flagsSecretsFile,
