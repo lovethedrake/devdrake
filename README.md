@@ -2,7 +2,8 @@
 
 __devdrake__, whose executable is abbreviated as `drake`, is a
 developer-oriented command-line tool for executing Drake jobs and pipelines
-using the local Docker daemon. The ability to do so offers developers some major benefits:
+using the local Docker daemon. The ability to do so offers developers some major
+benefits:
 
 * Makes it practical and convenient to define useful jobs like `test`, `lint`,
   or `build` (for example) in _one, common place_ then seamlessly reuse those
@@ -13,6 +14,13 @@ using the local Docker daemon. The ability to do so offers developers some major
 
 For more information about Drake jobs and pipelines, please refer to the
 [drakespec](https://github.com/lovethedrake/drakespec).
+
+## THIS PROJECT HIGHLY VOLATILE!
+
+devdrake implements the highly volatile
+[drakespec](https://github.com/lovethedrake/drakespec) and, as such is, itself,
+highly volatile. Users are warned that breaking changes to this tool are likely
+at any point up until its eventual 1.0 release.
 
 ## Installation
 
@@ -64,7 +72,7 @@ To list pipelines instead of jobs, use either the `--pipeline` or `-p` flag:
 $ drake list --pipeline
 ```
 
-### Executing jobs and pipeline
+### Executing jobs and pipelines
 
 To execute a single job:
 
@@ -72,50 +80,87 @@ To execute a single job:
 $ drake run <job-name>
 ```
 
-To execute multiple jobs in sequence, just provide additional job names as
+To execute multiple jobs, just provide additional job names as
 additional arguments:
 
 ```console
 $ drake run <job-name-0> <job-name-1> ... <job-name-n>
 ```
 
-By default, multiple jobs execute in sequence, but it is possible to execute
-multiple jobs concurrently using either the `--concurrently` or `-c` flag:
+Note, the command above creates an _ad hoc_ pipeline with no dependencies
+between its jobs. By default, they execute one at a time, _but in no specific
+order_. (This may change in the future.) It is recommended that if you need to
+frequently execute several jobs in a particular sequence, you explicitly create
+a named pipeline for that worflow in your `Drakefile.yaml`.
+
+It is possible to execute multiple jobs concurrently by using either the
+`--concurrency` or `-c` flag with a value greater than `1`.
 
 ```console
-$ drake run <job-name-0> <job-name-1> ... <job-name-n> --concurrently
+$ drake run <job-name-0> <job-name-1> ... <job-name-n> --concurrency 2
 ```
 
 Note: Because multiple jobs can execute concurrently and because jobs can
-involve multiple, co-operating containers, `drake` prefixes every line of output
+involve multiple, cooperating containers, `drake` prefixes every line of output
 with the job name and container name to disambiguate its source.
 
-To execute a pipeline instead of a job, use either the `--pipeline` or `-p` flag:
-
-```console
-$ drake run <pipeline-name>
-```
-
-Drake pipelines are composed of stages that always execute in sequence. Stages,
-in turn, are composed of jobs that MAY execute concurrently. `drake` never
-executes jobs concurrently by default. To allow concurrent execution of the jobs within each stage, once again, utilize either the `--concurrently` or `-c`
+To execute a pipeline instead of a job, use either the `--pipeline` or `-p`
 flag:
 
 ```console
-$ drake run <pipeline-name> --concurrently
+$ drake run <pipeline-name> --pipeline
 ```
 
-It is also possible to execute multiple pipelines in sequence:
+Note: Multiple pipelines _cannot_ be executed at once.
+
+Drake pipelines are composed of jobs that (dependencies between jobs
+notwithstanding) MAY execute concurrently. However, by default, `drake` never
+executes jobs in a pipeline concurrently. To enable concurrent execution of the
+jobs within a pipeline, once again, utilize either the `--concurrency` or `-c`
+flag with a value greater than `1`.
 
 ```console
-$ drake run <pipeline-name-0> <pipeline-name-1> ... <pipeline-name-n>
+$ drake run <pipeline-name> --pipeline --concurrency 2
 ```
 
-Note: When executing pipelines, the `--concurrently` or `-c` flag only enables
-concurrent execution of _jobs_ within each _stage_ of a pipeline. Stages will
-_always_ execute in sequence, and never concurrently. Similarly, when naming
-multiple pipelines for execution, those pipelines also will execute in sequence,
-and never concurrently.
+Note: The `--concurrency` or `-c` flag only tunes the _maximum_ allowed
+concurrency at any given moment during pipeline execution. Dependencies between
+jobs in the pipeline may sometimes prevent this maximum degree of concurrency
+from being achieved. For instance, given a pipeline containing two jobs, with
+the second dependent on successful completion of the first, the jobs in the
+pipeline can only ever execute in sequence, regardless of how hight a value is
+given to the `--concurrency` or `-c` flag.
+
+### Using secrets
+
+Jobs may, at times, require access to sensitive information that should not be
+checked into source control. This means that including these values anywhere in
+the job definitions in your `Drakefile.yaml` is not possible.
+
+To permit `drake` access to such secrets, add key/value pairs, one per line,
+with key and value delimited by `=` to a `Drakesecrets` file. By convention,
+this file is stored at the root of your project.
+
+For example:
+
+```
+DOCKER_REGISTRY_NAMESPACE=krancour
+DOCKER_PASSWORD=y7o9htGWkiVBbsqFjmeh
+GITHUB_TOKEN=7ddbd7a560b5b545b4bbeae0c006249adba0456a
+```
+
+If it exists at the root of your project, all variants of the `drake run`
+sub-command will, by default, load secrets from the `Drakesecrets` file and
+expose them as environment variables within every container of every job that it
+executes.
+
+If your `Drakesecrets` file does not exist at the root of your project,
+`drake run` supports optional `--file` and `-f` flags-- either of which can be
+used to point `drake` to the location of your `Drakesecrets`.
+
+__Unless it is kept outside your project source tree, do not forget to add
+`Drakesecrets` to your `.gitignore` file to avoid checking sensitive information
+into source control.__
 
 ## Contributing
 
