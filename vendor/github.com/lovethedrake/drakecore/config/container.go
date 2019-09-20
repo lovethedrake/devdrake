@@ -20,7 +20,7 @@ type Container interface {
 	// MountDockerSocket returns an indicator of whether the container should
 	// mount the Docker socket or not
 	MountDockerSocket() bool
-	// SourceMountPath returns a path to project source that should be mounted
+	// SourceMountPath returns a path to where project source should be mounted
 	// into the container
 	SourceMountPath() string
 }
@@ -46,7 +46,12 @@ func (c *container) Image() string {
 }
 
 func (c *container) Environment() []string {
-	return c.Env
+	// We don't want any alterations a caller may make to the slice we return to
+	// affect the containers's own Env slice, which we'd like to treat as
+	// immutable, so we return a COPY of that slice.
+	env := make([]string, len(c.Env))
+	copy(env, c.Env)
+	return env
 }
 
 func (c *container) WorkingDirectory() string {

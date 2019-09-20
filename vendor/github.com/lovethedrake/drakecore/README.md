@@ -1,6 +1,14 @@
 # drakecore
 
-Placeholder
+__drakecore__ is a library of generally useful components for implementing
+[drakespec](https://github.com/lovethedrake/drakespec)-compliant tools in Go.
+
+## THIS PROJECT HIGHLY VOLATILE!
+
+drakecore implements the highly volatile
+[drakespec](https://github.com/lovethedrake/drakespec) and, as such is, itself,
+highly volatile. Users are warned that breaking changes to this software are
+likely at any point up until its eventual 1.0 release.
 
 ## Contributing
 

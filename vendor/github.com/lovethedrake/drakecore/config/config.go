@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"sort"
 
@@ -13,20 +14,20 @@ type Config interface {
 	// AllJobs returns a list of all Jobs
 	AllJobs() []Job
 	// Jobs returns an ordered list of Jobs given the provided jobNames.
-	Jobs(jobNames []string) ([]Job, error)
+	Jobs(jobNames ...string) ([]Job, error)
 	// AllPipelines returns a list of all Pipelines
 	AllPipelines() []Pipeline
 	// Pipelines returns an ordered list of Pipelines given the provided
 	// pipelineNames.
-	Pipelines(pipelineNames []string) ([]Pipeline, error)
+	Pipelines(pipelineNames ...string) ([]Pipeline, error)
 }
 
 // config represents the root of the Drake configuration tree.
 type config struct {
-	Jobz      map[string]*job      `json:"jobs"`
-	Pipelinez map[string]*pipeline `json:"pipelines"`
-	jobs      []Job
-	pipelines []Pipeline
+	jobs            []Job
+	jobsByName      map[string]Job
+	pipelines       []Pipeline
+	pipelinesByName map[string]Pipeline
 }
 
 // NewConfigFromFile loads configuration from the specified path and returns it.
@@ -36,43 +37,136 @@ func NewConfigFromFile(configFilePath string) (Config, error) {
 		return nil,
 			errors.Wrapf(err, "error reading config file %s", configFilePath)
 	}
-	config := &config{}
-	if err := yaml.Unmarshal(configFileBytes, config); err != nil {
+	cfg, err := NewConfigFromYAML(configFileBytes)
+	if err != nil {
 		return nil,
 			errors.Wrapf(err, "error unmarshalling config file %s", configFilePath)
 	}
-	// Step through all jobs to add their name attribute, which is inferred
-	// from the keys in the config.Jobs map. While we're at it, create a list
-	// of all jobs.
-	config.jobs = make([]Job, len(config.Jobz))
+	return cfg, nil
+}
+
+// NewConfigFromYAML loads configuration from the specified YAML bytes.
+func NewConfigFromYAML(yamlBytes []byte) (Config, error) {
+	config := &config{}
+	err := yaml.Unmarshal(yamlBytes, config)
+	return config, err
+}
+
+func (c *config) UnmarshalJSON(data []byte) error {
+	// We have a lot of work to do to turn flat JSON into a rich object graph.
+	// We'll use these "flat" one-off types to facilitate this process.
+	type flatJob struct {
+		Containers []*container `json:"containers"`
+	}
+	type flatPipelineJob struct {
+		Name         string   `json:"name"`
+		Dependencies []string `json:"dependencies"`
+	}
+	type flatPipeline struct {
+		Selector *pipelineSelector  `json:"criteria"`
+		Jobs     []*flatPipelineJob `json:"jobs"`
+	}
+	type flatConfig struct {
+		Jobs      map[string]*flatJob      `json:"jobs"`
+		Pipelines map[string]*flatPipeline `json:"pipelines"`
+	}
+	flatCfg := flatConfig{}
+	if err := json.Unmarshal(data, &flatCfg); err != nil {
+		return err
+	}
+	// Step through all flatJobs to populate a real job for each. While we're at
+	// it, create both a slice and a map of all jobs.
+	c.jobs = make([]Job, len(flatCfg.Jobs))
+	c.jobsByName = map[string]Job{}
 	i := 0
-	for jobName, job := range config.Jobz {
-		job.name = jobName
-		config.jobs[i] = job
-		i++
-	}
-	// Sort the list of all jobs lexically
-	sort.Slice(config.jobs, func(a, b int) bool {
-		return config.jobs[a].Name() < config.jobs[b].Name()
-	})
-	// Step through all pipelines to add their name attribute, which is inferred
-	// from the keys in the config.Pipelines map. Also resolve jobs referenced
-	// by each pipeline. While we're at it, create a list of all pipelines.
-	config.pipelines = make([]Pipeline, len(config.Pipelinez))
-	i = 0
-	for pipelineName, pipeline := range config.Pipelinez {
-		pipeline.name = pipelineName
-		if err := pipeline.resolveJobs(config.Jobz); err != nil {
-			return nil, err
+	for jobName, flatJob := range flatCfg.Jobs {
+		job := &job{
+			name:       jobName,
+			containers: make([]Container, len(flatJob.Containers)),
 		}
-		config.pipelines[i] = pipeline
+		for j, container := range flatJob.Containers {
+			job.containers[j] = container
+		}
+		c.jobs[i] = job
+		c.jobsByName[job.name] = job
 		i++
 	}
-	// Sort the list of all pipelines lexically
-	sort.Slice(config.pipelines, func(a, b int) bool {
-		return config.pipelines[a].Name() < config.pipelines[b].Name()
-	})
-	return config, nil
+	// Sort the slice of all jobs lexically
+	sort.Slice(
+		c.jobs,
+		func(a, b int) bool {
+			return c.jobs[a].Name() < c.jobs[b].Name()
+		},
+	)
+	// Step through all flatPipelines to populate a real pipeline for each. While
+	// we're at it, create both a slice and a map of all pipelines.
+	c.pipelines = make([]Pipeline, len(flatCfg.Pipelines))
+	c.pipelinesByName = map[string]Pipeline{}
+	i = 0
+	for pipelineName, flatPipeline := range flatCfg.Pipelines {
+		pipeline := &pipeline{
+			name:     pipelineName,
+			selector: flatPipeline.Selector,
+			jobs:     make([]PipelineJob, len(flatPipeline.Jobs)),
+		}
+		// Step through all flatPipelineJobs to populate a real pipelineJob for
+		// each.
+		pipelineJobs := map[string]PipelineJob{}
+		for j, flatPipelineJob := range flatPipeline.Jobs {
+			if _, ok := pipelineJobs[flatPipelineJob.Name]; ok {
+				return errors.Errorf(
+					"pipeline %q references the job %q more than once; this is not "+
+						"permitted",
+					pipeline.name,
+					flatPipelineJob.Name,
+				)
+			}
+			pipelineJob := &pipelineJob{
+				dependencies: make([]PipelineJob, len(flatPipelineJob.Dependencies)),
+			}
+			var ok bool
+			if pipelineJob.job, ok = c.jobsByName[flatPipelineJob.Name]; !ok {
+				return errors.Errorf(
+					"pipeline %q references undefined job %q",
+					pipeline.name,
+					flatPipelineJob.Name,
+				)
+			}
+			for h, dependencyName := range flatPipelineJob.Dependencies {
+				if _, ok = c.jobsByName[dependencyName]; !ok {
+					return errors.Errorf(
+						"job %q of pipeline %q depends on undefined job %q",
+						flatPipelineJob.Name,
+						pipeline.name,
+						dependencyName,
+					)
+				}
+				if pipelineJob.dependencies[h], ok = pipelineJobs[dependencyName]; !ok {
+					return errors.Errorf(
+						"job %q of pipeline %q depends on job %q, which is defined, but "+
+							"does not precede %q in this pipeline",
+						flatPipelineJob.Name,
+						pipeline.name,
+						dependencyName,
+						flatPipelineJob.Name,
+					)
+				}
+			}
+			pipeline.jobs[j] = pipelineJob
+			pipelineJobs[flatPipelineJob.Name] = pipelineJob
+		}
+		c.pipelines[i] = pipeline
+		c.pipelinesByName[pipeline.name] = pipeline
+		i++
+	}
+	// Sort the slice of all pipelines lexically
+	sort.Slice(
+		c.pipelines,
+		func(a, b int) bool {
+			return c.pipelines[a].Name() < c.pipelines[b].Name()
+		},
+	)
+	return nil
 }
 
 func (c *config) AllJobs() []Job {
@@ -84,10 +178,10 @@ func (c *config) AllJobs() []Job {
 	return jobs
 }
 
-func (c *config) Jobs(jobNames []string) ([]Job, error) {
+func (c *config) Jobs(jobNames ...string) ([]Job, error) {
 	jobs := []Job{}
 	for _, jobName := range jobNames {
-		job, ok := c.Jobz[jobName]
+		job, ok := c.jobsByName[jobName]
 		if !ok {
 			return nil,
 				errors.Errorf("job \"%s\" not found", jobName)
@@ -106,10 +200,10 @@ func (c *config) AllPipelines() []Pipeline {
 	return pipelines
 }
 
-func (c *config) Pipelines(pipelineNames []string) ([]Pipeline, error) {
+func (c *config) Pipelines(pipelineNames ...string) ([]Pipeline, error) {
 	pipelines := []Pipeline{}
 	for _, pipelineName := range pipelineNames {
-		pipeline, ok := c.Pipelinez[pipelineName]
+		pipeline, ok := c.pipelinesByName[pipelineName]
 		if !ok {
 			return nil,
 				errors.Errorf("pipeline \"%s\" not found", pipelineName)
