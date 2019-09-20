@@ -47,7 +47,7 @@ func run(c *cli.Context) error {
 			return errors.New("only one pipeline may be executed at a time")
 		}
 		var pipelines []config.Pipeline
-		pipelines, err = cfg.Pipelines(c.Args())
+		pipelines, err = cfg.Pipelines(c.Args()...)
 		if err != nil {
 			return err
 		}
@@ -57,7 +57,7 @@ func run(c *cli.Context) error {
 		return errors.New("no jobs were specified for execution")
 	}
 	var jobs []config.Job
-	jobs, err = cfg.Jobs(c.Args())
+	jobs, err = cfg.Jobs(c.Args()...)
 	if err != nil {
 		return err
 	}

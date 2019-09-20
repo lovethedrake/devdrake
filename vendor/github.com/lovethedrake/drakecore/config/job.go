@@ -10,17 +10,18 @@ type Job interface {
 
 type job struct {
 	name       string
-	Containerz []*container `json:"containers"`
+	containers []Container
 }
 
-func (t *job) Name() string {
-	return t.name
+func (j *job) Name() string {
+	return j.name
 }
 
-func (t *job) Containers() []Container {
-	containers := make([]Container, len(t.Containerz))
-	for i, container := range t.Containerz {
-		containers[i] = container
-	}
+func (j *job) Containers() []Container {
+	// We don't want any alterations a caller may make to the slice we return to
+	// affect the job's own containers slice, which we'd like to treat as
+	// immutable, so we return a COPY of that slice.
+	containers := make([]Container, len(j.containers))
+	copy(containers, j.containers)
 	return containers
 }
