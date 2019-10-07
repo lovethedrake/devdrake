@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+export full_git_version=$(git rev-parse HEAD)
 export git_version=$(git describe --always --abbrev=7 --dirty --match=NeVeRmAtCh)
 rel_version=$(git tag --list 'v*' --points-at HEAD | tail -n 1)
 
