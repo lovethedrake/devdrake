@@ -32,6 +32,11 @@ jobs:
     - <<: *baseGoContainer
       command: go test -timeout 30s -race -coverprofile=coverage.txt -covermode=atomic ./...
 
+  upload-coverage-report:
+    containers:
+    - <<: *baseGoContainer
+      command: bash -c "bash <(curl -s https://codecov.io/bash)"
+
   lint:
     containers:
     - <<: *baseGoContainer
@@ -48,11 +53,18 @@ pipelines:
 ################################################################################
 
   ci:
-    criteria:
-      branches:
-        only:
-        - /.*/
+    triggers:
+    - spec:
+        uri: github.com/lovethedrake/drakespec-github
+        version: v1.0.0
+      config:
+        branches:
+          only:
+          - /.*/
     jobs:
     - name: lint
     - name: verify-vendored-code
     - name: test
+    - name: upload-coverage-report
+      dependencies:
+      - test

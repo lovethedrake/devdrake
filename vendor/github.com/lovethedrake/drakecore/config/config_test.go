@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -165,6 +166,14 @@ jobs:
     command: echo bar
 pipelines:
   foobar:
+    triggers:
+    - spec:
+        uri: github.com/lovethedrake/drakespec-github
+        version: v1.0.0
+      config:
+        branches:
+          only:
+          - /.*/
     jobs:
     - name: foo
     - name: bar
@@ -216,11 +225,11 @@ pipelines:
 				barJob := jobs[1]
 
 				foobarPipeline := pipelines[0]
-				require.Equal(t, 2, len(foobarPipeline.Jobs()))
+				require.Len(t, foobarPipeline.Jobs(), 2)
 				require.Equal(t, fooJob, foobarPipeline.Jobs()[0].Job())
 				require.Empty(t, foobarPipeline.Jobs()[0].Dependencies())
 				require.Equal(t, barJob, foobarPipeline.Jobs()[1].Job())
-				require.Equal(t, 1, len(foobarPipeline.Jobs()[1].Dependencies()))
+				require.Len(t, foobarPipeline.Jobs()[1].Dependencies(), 1)
 				require.Equal(
 					t,
 					fooJob,
@@ -228,15 +237,39 @@ pipelines:
 				)
 
 				barfooPipeline := pipelines[1]
-				require.Equal(t, 2, len(barfooPipeline.Jobs()))
+				require.Len(t, barfooPipeline.Jobs(), 2)
 				require.Equal(t, barJob, barfooPipeline.Jobs()[0].Job())
 				require.Empty(t, barfooPipeline.Jobs()[0].Dependencies())
 				require.Equal(t, fooJob, barfooPipeline.Jobs()[1].Job())
-				require.Equal(t, 1, len(barfooPipeline.Jobs()[1].Dependencies()))
+				require.Len(t, barfooPipeline.Jobs()[1].Dependencies(), 1)
 				require.Equal(
 					t,
 					barJob,
 					barfooPipeline.Jobs()[1].Dependencies()[0].Job(),
+				)
+
+				// Check that we got our triggers for the foobar pipeline
+				require.Len(t, foobarPipeline.Triggers(), 1)
+				trigger := foobarPipeline.Triggers()[0]
+				triggerSpec := trigger.Spec()
+				require.Equal(
+					t,
+					"github.com/lovethedrake/drakespec-github",
+					triggerSpec.URI(),
+				)
+				require.Equal(
+					t,
+					"v1.0.0",
+					triggerSpec.Version(),
+				)
+				require.NotEmpty(t, trigger.Config())
+				require.True(
+					t,
+					strings.HasPrefix(string(trigger.Config()), "{"),
+				)
+				require.True(
+					t,
+					strings.HasSuffix(string(trigger.Config()), "}"),
 				)
 			},
 		},
@@ -279,7 +312,7 @@ func TestJobs(t *testing.T) {
 			jobsToFetch: []string{"foo"},
 			assertions: func(t *testing.T, jobs []Job, err error) {
 				require.NoError(t, err)
-				require.Equal(t, 1, len(jobs))
+				require.Len(t, jobs, 1)
 				require.Equal(t, "foo", jobs[0].Name())
 			},
 		},
@@ -289,7 +322,7 @@ func TestJobs(t *testing.T) {
 			jobsToFetch: []string{"foo", "bar"},
 			assertions: func(t *testing.T, jobs []Job, err error) {
 				require.NoError(t, err)
-				require.Equal(t, 2, len(jobs))
+				require.Len(t, jobs, 2)
 				require.Equal(t, "foo", jobs[0].Name())
 				require.Equal(t, "bar", jobs[1].Name())
 			},
@@ -332,7 +365,7 @@ func TestPipelines(t *testing.T) {
 			pipelinesToFetch: []string{"foo"},
 			assertions: func(t *testing.T, pipelines []Pipeline, err error) {
 				require.NoError(t, err)
-				require.Equal(t, 1, len(pipelines))
+				require.Len(t, pipelines, 1)
 				require.Equal(t, "foo", pipelines[0].Name())
 			},
 		},
@@ -342,7 +375,7 @@ func TestPipelines(t *testing.T) {
 			pipelinesToFetch: []string{"foo", "bar"},
 			assertions: func(t *testing.T, pipelines []Pipeline, err error) {
 				require.NoError(t, err)
-				require.Equal(t, 2, len(pipelines))
+				require.Len(t, pipelines, 2)
 				require.Equal(t, "foo", pipelines[0].Name())
 				require.Equal(t, "bar", pipelines[1].Name())
 			},

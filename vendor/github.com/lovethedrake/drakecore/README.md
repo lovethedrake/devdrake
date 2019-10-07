@@ -1,5 +1,8 @@
 # drakecore
 
+[![codecov](https://codecov.io/gh/lovethedrake/drakecore/branch/master/graph/badge.svg)](https://codecov.io/gh/lovethedrake/drakecore)
+
+
 __drakecore__ is a library of generally useful components for implementing
 [drakespec](https://github.com/lovethedrake/drakespec)-compliant tools in Go.
 

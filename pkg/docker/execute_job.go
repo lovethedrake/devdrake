@@ -12,8 +12,6 @@ import (
 	"github.com/lovethedrake/drakecore/config"
 	"github.com/mattn/go-shellwords"
 	"github.com/pkg/errors"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
 func (e *executor) executeJob(
@@ -185,36 +183,8 @@ func (e *executor) createContainer(
 	networkContainerID string,
 	container config.Container,
 ) (string, error) {
-
-	sha := "unknown"
-	var branch string
-
-	// TODO: We should probably move this somewhere else
-	workDir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	repo, err := git.PlainOpen(workDir)
-	if err != nil && err != git.ErrRepositoryNotExists {
-		return "", err
-	}
-	if repo != nil {
-		ref, rerr := repo.Head()
-		if rerr != nil && rerr != plumbing.ErrReferenceNotFound {
-			return "", rerr
-		}
-		if ref != nil {
-			sha = ref.Hash().String()
-			branch = ref.Name().Short()
-		}
-	}
-	// TODO: End "we should probably move this somewhere else"
-
 	env := make([]string, len(secrets))
 	copy(env, secrets)
-	env = append(env, fmt.Sprintf("DRAKE_SHA1=%s", sha))
-	env = append(env, fmt.Sprintf("DRAKE_BRANCH=%s", branch))
-	env = append(env, "DRAKE_TAG=")
 
 	containerConfig := &dockerContainer.Config{
 		Image:        container.Image(),
@@ -226,7 +196,7 @@ func (e *executor) createContainer(
 	}
 	if container.Command() != "" {
 		var cmd []string
-		cmd, err = shellwords.Parse(container.Command())
+		cmd, err := shellwords.Parse(container.Command())
 		if err != nil {
 			return "", errors.Wrap(err, "error parsing container command")
 		}

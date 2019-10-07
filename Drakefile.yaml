@@ -139,10 +139,14 @@ pipelines:
 ################################################################################
 
   ci:
-    criteria:
-      branches:
-        only:
-        - /.*/
+    triggers:
+    - spec:
+        uri: github.com/lovethedrake/drakespec-github
+        version: v1.0.0
+      config:
+        branches:
+          only:
+          - /.*/
     jobs:
     - name: lint
     - name: verify-vendored-code
@@ -168,10 +172,14 @@ pipelines:
 ################################################################################
 
   release:
-    criteria:
-      tags:
-        only:
-        - /v[0-9]+(\.[0-9]+)*(\-.+)?/
+    triggers:
+    - spec:
+        uri: github.com/lovethedrake/drakespec-github
+        version: v1.0.0
+      config:
+        tags:
+          only:
+          - /v[0-9]+(\.[0-9]+)*(\-.+)?/
     jobs:
     - name: build-linux-amd64
     - name: build-darwin-amd64
