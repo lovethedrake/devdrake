@@ -22,12 +22,12 @@ func (a *adHocPipeline) Name() string {
 	return ""
 }
 
-func (a *adHocPipeline) Matches(string, string) (bool, error) {
-	return false, nil
-}
-
 func (a *adHocPipeline) Jobs() []config.PipelineJob {
 	return a.jobs
+}
+
+func (a *adHocPipeline) Triggers() []config.PipelineTrigger {
+	return []config.PipelineTrigger{}
 }
 
 type adHocPipelineJob struct {
