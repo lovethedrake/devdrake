@@ -10,6 +10,6 @@ go get -u github.com/tcnksm/ghr
 
 set +x
 
-echo "Publishing CLI binaries for commit $git_version"
+echo "Publishing CLI binaries for commit $full_git_version"
 
-ghr -t $GITHUB_TOKEN -u lovethedrake -r devdrake -c $git_version -delete $rel_version ./bin/drake/
+ghr -t $GITHUB_TOKEN -u lovethedrake -r devdrake -c $full_git_version -delete $rel_version ./bin/drake/
