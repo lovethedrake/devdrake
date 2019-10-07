@@ -63,7 +63,7 @@ func (c *config) UnmarshalJSON(data []byte) error {
 		Dependencies []string `json:"dependencies"`
 	}
 	type flatPipeline struct {
-		Selector *pipelineSelector  `json:"criteria"`
+		Triggers []*pipelineTrigger `json:"triggers"`
 		Jobs     []*flatPipelineJob `json:"jobs"`
 	}
 	type flatConfig struct {
@@ -106,8 +106,13 @@ func (c *config) UnmarshalJSON(data []byte) error {
 	for pipelineName, flatPipeline := range flatCfg.Pipelines {
 		pipeline := &pipeline{
 			name:     pipelineName,
-			selector: flatPipeline.Selector,
+			triggers: make([]PipelineTrigger, len(flatPipeline.Triggers)),
 			jobs:     make([]PipelineJob, len(flatPipeline.Jobs)),
+		}
+		// Step through all the triggers (implementations) and add to an slice of
+		// Triggers (interfaces).
+		for j, trigger := range flatPipeline.Triggers {
+			pipeline.triggers[j] = trigger
 		}
 		// Step through all flatPipelineJobs to populate a real pipelineJob for
 		// each.
