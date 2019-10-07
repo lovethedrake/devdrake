@@ -185,9 +185,6 @@ func (e *executor) createContainer(
 ) (string, error) {
 	env := make([]string, len(secrets))
 	copy(env, secrets)
-	env = append(env, fmt.Sprintf("DRAKE_SHA1=%s", sha))
-	env = append(env, fmt.Sprintf("DRAKE_BRANCH=%s", branch))
-	env = append(env, "DRAKE_TAG=")
 
 	containerConfig := &dockerContainer.Config{
 		Image:        container.Image(),

@@ -4,10 +4,12 @@
 
 set -euox pipefail
 
+source scripts/versioning.sh
+
 go get -u github.com/tcnksm/ghr
 
 set +x
 
-echo "Publishing CLI binaries for commit $DRAKE_SHA1"
+echo "Publishing CLI binaries for commit $git_version"
 
-ghr -t $GITHUB_TOKEN -u lovethedrake -r devdrake -c $DRAKE_SHA1 -delete $DRAKE_TAG ./bin/drake/
+ghr -t $GITHUB_TOKEN -u lovethedrake -r devdrake -c $git_version -delete $rel_version ./bin/drake/
