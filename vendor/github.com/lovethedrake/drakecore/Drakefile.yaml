@@ -58,9 +58,10 @@ pipelines:
         uri: github.com/lovethedrake/drakespec-github
         version: v1.0.0
       config:
-        branches:
-          only:
-          - /.*/
+        checkSuiteRequest:
+          branches:
+            only:
+            - /.*/
     jobs:
     - name: lint
     - name: verify-vendored-code
