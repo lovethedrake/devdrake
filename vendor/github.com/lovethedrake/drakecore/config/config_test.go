@@ -14,9 +14,75 @@ func TestNewConfigFromYAML(t *testing.T) {
 		assertions func(*testing.T, Config, error)
 	}{
 		{
+			name: "undefined specUri field",
+			yamlBytes: []byte(`
+specVersion: v0.1.0`,
+			),
+			assertions: func(t *testing.T, _ Config, err error) {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "specUri is a required field")
+			},
+		},
+
+		{
+			name: "unsupported spec in specUri field",
+			yamlBytes: []byte(`
+specUri: github.com/lovethedrake/bogus-spec
+specVersion: v0.1.0`,
+			),
+			assertions: func(t *testing.T, _ Config, err error) {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "github.com/lovethedrake/bogus-spec")
+				require.Contains(
+					t,
+					err.Error(),
+					"does not reference a supported specification",
+				)
+			},
+		},
+
+		{
+			name: "undefined specVersion field",
+			yamlBytes: []byte(`
+specUri: github.com/lovethedrake/drakespec`,
+			),
+			assertions: func(t *testing.T, _ Config, err error) {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "specVersion is a required field")
+			},
+		},
+
+		{
+			name: "invalid specVersion field",
+			yamlBytes: []byte(`
+specUri: github.com/lovethedrake/drakespec
+specVersion: bogus`,
+			),
+			assertions: func(t *testing.T, _ Config, err error) {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "bogus")
+				require.Contains(t, err.Error(), "is not a valid semantic version")
+			},
+		},
+
+		{
+			name: "unsupported specVersion",
+			yamlBytes: []byte(`
+specUri: github.com/lovethedrake/drakespec
+specVersion: v1.0.0`,
+			),
+			assertions: func(t *testing.T, _ Config, err error) {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "v1.0.0")
+				require.Contains(t, err.Error(), "is not a supported version")
+			},
+		},
+
+		{
 			name: "undefined job",
 			yamlBytes: []byte(`
-version: v1.0.0
+specUri: github.com/lovethedrake/drakespec
+specVersion: v0.1.0
 pipelines:
   foobar:
     jobs:
@@ -35,7 +101,8 @@ pipelines:
 		{
 			name: "undefined job dependency",
 			yamlBytes: []byte(`
-version: v1.0.0
+specUri: github.com/lovethedrake/drakespec
+specVersion: v0.1.0
 jobs:
   bar:
     containers:
@@ -62,7 +129,8 @@ pipelines:
 		{
 			name: "job dependency does not precede job in pipeline",
 			yamlBytes: []byte(`
-version: v1.0.0
+specUri: github.com/lovethedrake/drakespec
+specVersion: v0.1.0
 baseDemoContainer: &baseDemoContainer
   name: demo
   image: debian:stretch
@@ -96,7 +164,8 @@ pipelines:
 		{
 			name: "job depends on itself",
 			yamlBytes: []byte(`
-version: v1.0.0
+specUri: github.com/lovethedrake/drakespec
+specVersion: v0.1.0
 jobs:
   foo:
     containers:
@@ -124,7 +193,8 @@ pipelines:
 		{
 			name: "job appears in pipeline more than once",
 			yamlBytes: []byte(`
-version: v1.0.0
+specUri: github.com/lovethedrake/drakespec
+specVersion: v0.1.0
 jobs:
   foo:
     containers:
@@ -151,7 +221,8 @@ pipelines:
 		{
 			name: "valid config",
 			yamlBytes: []byte(`
-version: v1.0.0
+specUri: github.com/lovethedrake/drakespec
+specVersion: v0.1.0
 baseDemoContainer: &baseDemoContainer
   name: demo
   image: debian:stretch
@@ -167,9 +238,8 @@ jobs:
 pipelines:
   foobar:
     triggers:
-    - spec:
-        uri: github.com/lovethedrake/drakespec-github
-        version: v1.0.0
+    - specUri: github.com/lovethedrake/drakespec-github
+      specVersion: v1.0.0
       config:
         branches:
           only:
@@ -251,16 +321,15 @@ pipelines:
 				// Check that we got our triggers for the foobar pipeline
 				require.Len(t, foobarPipeline.Triggers(), 1)
 				trigger := foobarPipeline.Triggers()[0]
-				triggerSpec := trigger.Spec()
 				require.Equal(
 					t,
 					"github.com/lovethedrake/drakespec-github",
-					triggerSpec.URI(),
+					trigger.SpecURI(),
 				)
 				require.Equal(
 					t,
 					"v1.0.0",
-					triggerSpec.Version(),
+					trigger.SpecVersion(),
 				)
 				require.NotEmpty(t, trigger.Config())
 				require.True(

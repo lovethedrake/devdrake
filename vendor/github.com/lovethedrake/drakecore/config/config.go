@@ -5,8 +5,14 @@ import (
 	"io/ioutil"
 	"sort"
 
+	"github.com/Masterminds/semver"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
+)
+
+const (
+	drakeSpecURI        = "github.com/lovethedrake/drakespec"
+	supportedVersionStr = "v0.1.0"
 )
 
 // Config is a public interface for the root of the Drake configuration tree.
@@ -67,13 +73,51 @@ func (c *config) UnmarshalJSON(data []byte) error {
 		Jobs     []*flatPipelineJob `json:"jobs"`
 	}
 	type flatConfig struct {
-		Jobs      map[string]*flatJob      `json:"jobs"`
-		Pipelines map[string]*flatPipeline `json:"pipelines"`
+		SpecURI     string                   `json:"specUri"`
+		SpecVersion string                   `json:"specVersion"`
+		Jobs        map[string]*flatJob      `json:"jobs"`
+		Pipelines   map[string]*flatPipeline `json:"pipelines"`
 	}
 	flatCfg := flatConfig{}
 	if err := json.Unmarshal(data, &flatCfg); err != nil {
 		return err
 	}
+
+	// Check that we're dealing with configuration that explicitly claims
+	// compliance with the authentic DrakeSpec.
+	if flatCfg.SpecURI == "" {
+		return errors.New("specUri is a required field")
+	}
+	if flatCfg.SpecURI != drakeSpecURI {
+		return errors.Errorf(
+			"specUri %q does not reference a supported specification; only %q is "+
+				"supported.",
+			flatCfg.SpecURI,
+			drakeSpecURI,
+		)
+	}
+	// Check that specVersion is defined
+	if flatCfg.SpecVersion == "" {
+		return errors.New("specVersion is a required field")
+	}
+	// Check that specVersion is a valid semantic version
+	specVersion, err := semver.NewVersion(flatCfg.SpecVersion)
+	if err != nil {
+		return errors.Errorf(
+			"specVersion %q is not a valid semantic version",
+			flatCfg.SpecVersion,
+		)
+	}
+	// Check that specVersion is a supported semantic version
+	supportedVersion, _ := semver.NewVersion(supportedVersionStr)
+	if !specVersion.Equal(supportedVersion) {
+		return errors.Errorf(
+			"specVersion %q is not a supported version; only %q is supported.",
+			flatCfg.SpecVersion,
+			supportedVersionStr,
+		)
+	}
+
 	// Step through all flatJobs to populate a real job for each. While we're at
 	// it, create both a slice and a map of all jobs.
 	c.jobs = make([]Job, len(flatCfg.Jobs))
@@ -109,7 +153,7 @@ func (c *config) UnmarshalJSON(data []byte) error {
 			triggers: make([]PipelineTrigger, len(flatPipeline.Triggers)),
 			jobs:     make([]PipelineJob, len(flatPipeline.Jobs)),
 		}
-		// Step through all the triggers (implementations) and add to an slice of
+		// Step through all the triggers (implementations) and add to a slice of
 		// Triggers (interfaces).
 		for j, trigger := range flatPipeline.Triggers {
 			pipeline.triggers[j] = trigger

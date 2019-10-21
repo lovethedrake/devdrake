@@ -13,6 +13,14 @@
   revision = "d6e3b3328b783f23731bc4d058875b0371ff8109"
 
 [[projects]]
+  digest = "1:78d2a7d3aac5f79d447a0aa7f0acc10fa2006cbb70acfe2fb5369e3c0d6bfe7f"
+  name = "github.com/Masterminds/semver"
+  packages = ["."]
+  pruneopts = ""
+  revision = "fe7c21038085e01e67044ec1efe3afb1eaa59f75"
+  version = "v3.0.1"
+
+[[projects]]
   digest = "1:79882d9a567ed3015a12e4f59d0845ccb99efac07346cf8cf5c71b7e935ede84"
   name = "github.com/Microsoft/go-winio"
   packages = [
@@ -116,12 +124,12 @@
   version = "v1.0.2"
 
 [[projects]]
-  digest = "1:7a42ae43260d6610c5ce95658ee810294efc58b358fb4f016eee81f977243e3a"
+  digest = "1:f060c2a33bab0fa3180bc40209524893ca46d3d86bd082ccaafc90e03c029650"
   name = "github.com/lovethedrake/drakecore"
   packages = ["config"]
   pruneopts = ""
-  revision = "bd3a881a3f8755220187fdfb2b1b7832ad3be67f"
-  version = "v0.4.0"
+  revision = "2a9210bcad64c8dd5a2470cfcfd4d6b325abc865"
+  version = "v0.5.1"
 
 [[projects]]
   digest = "1:0093a7c66d5b9e0cdaf4be5c20e0a9b889d1d839148eeed1d587e99b4cfd90ff"
