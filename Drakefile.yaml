@@ -1,4 +1,5 @@
-version: v1.0.0
+specUri: github.com/lovethedrake/drakespec
+specVersion: v0.1.0
 
 baseGoContainer: &baseGoContainer
   name: go
@@ -140,9 +141,8 @@ pipelines:
 
   ci:
     triggers:
-    - spec:
-        uri: github.com/lovethedrake/drakespec-github
-        version: v1.0.0
+    - specUri: github.com/lovethedrake/drakespec-github
+      specVersion: v1.0.0
       config:
         checkSuiteRequest:
           branches:
@@ -174,9 +174,8 @@ pipelines:
 
   release:
     triggers:
-    - spec:
-        uri: github.com/lovethedrake/drakespec-github
-        version: v1.0.0
+    - specUri: github.com/lovethedrake/drakespec-github
+      specVersion: v1.0.0
       config:
         tagPush:
           tags:
