@@ -1,9 +1,9 @@
-# devdrake
+# DevDrake
 
-__devdrake__, whose executable is abbreviated as `drake`, is a
-developer-oriented command-line tool for executing Drake jobs and pipelines
-using the local Docker daemon. The ability to do so offers developers some major
-benefits:
+__DevDrake__, whose executable is abbreviated as `drake`, is a
+developer-oriented command-line tool for executing DrakeSpec-compliant jobs and
+pipelines using the local Docker daemon. The ability to do so offers developers
+some major benefits:
 
 * Makes it practical and convenient to define useful jobs like `test`, `lint`,
   or `build` (for example) in _one, common place_ then seamlessly reuse those
@@ -12,13 +12,13 @@ benefits:
 * Ensures parity between CI/CD platforms and the local development environment
   by sandboxing critical work in containers with a single, common definition.
 
-For more information about Drake jobs and pipelines, please refer to the
-[drakespec](https://github.com/lovethedrake/drakespec).
+For more information about DrakeSpec-compliant jobs and pipelines, please refer
+to the [DrakeSpec](https://github.com/lovethedrake/drakespec).
 
 ## THIS PROJECT HIGHLY VOLATILE!
 
-devdrake implements the highly volatile
-[drakespec](https://github.com/lovethedrake/drakespec) and, as such is, itself,
+DevDrake implements the highly volatile
+[DrakeSpec](https://github.com/lovethedrake/drakespec) and, as such is, itself,
 highly volatile. Users are warned that breaking changes to this tool are likely
 at any point up until its eventual 1.0 release.
 
@@ -38,8 +38,8 @@ Windows) then moving it to some file system location that is on your `PATH`.
 section covers only the most ubiquitous and most useful commands to help you get
 started.
 
-As with all Drake-compliant tools, `drake` utilizes a `Drakefile.yaml` file that
-defines Drake jobs and pipelines. By convention, `Drakefile.yaml` is typically
+`drake` utilizes a `Drakefile.yaml` file that defines DrakeSpec-compliant jobs
+and pipelines using the Drake DSL. By convention, `Drakefile.yaml` is typically
 located at the root of the project tree.
 
 If you need a sample project with a trivial `Drakefile.yaml` to experiment with,
@@ -113,11 +113,11 @@ $ drake run <pipeline-name> --pipeline
 
 Note: Multiple pipelines _cannot_ be executed at once.
 
-Drake pipelines are composed of jobs that (dependencies between jobs
-notwithstanding) MAY execute concurrently. However, by default, `drake` never
-executes jobs in a pipeline concurrently. To enable concurrent execution of the
-jobs within a pipeline, once again, utilize either the `--concurrency` or `-c`
-flag with a value greater than `1`.
+Pipelines are composed of jobs that (dependencies between jobs notwithstanding)
+MAY execute concurrently. However, by default, `drake` never executes jobs in a
+pipeline concurrently. To enable concurrent execution of the jobs within a
+pipeline, once again, utilize either the `--concurrency` or `-c` flag with a
+value greater than `1`.
 
 ```console
 $ drake run <pipeline-name> --pipeline --concurrency 2

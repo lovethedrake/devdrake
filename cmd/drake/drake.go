@@ -10,8 +10,10 @@ import (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "drake"
-	app.Usage = "execute Drake jobs and pipelines using the local Docker daemon"
+	app.Name = "DevDrake"
+	app.HelpName = "drake"
+	app.Usage = "execute DrakeSpec-compliant jobs and pipelines using the " +
+		"local Docker daemon"
 	app.Version = version.Version()
 	if version.Commit() != "" {
 		app.Version = fmt.Sprintf("%s+%s", app.Version, version.Commit())
