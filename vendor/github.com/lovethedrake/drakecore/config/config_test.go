@@ -16,11 +16,17 @@ func TestNewConfigFromYAML(t *testing.T) {
 		{
 			name: "undefined specUri field",
 			yamlBytes: []byte(`
-specVersion: v0.1.0`,
+specVersion: v0.1.0
+jobs:
+  foo:
+    containers:
+    - name: demo
+      image: debian:stretch
+      command: echo foo`,
 			),
 			assertions: func(t *testing.T, _ Config, err error) {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), "specUri is a required field")
+				require.Contains(t, err.Error(), "specUri is required")
 			},
 		},
 
@@ -28,27 +34,35 @@ specVersion: v0.1.0`,
 			name: "unsupported spec in specUri field",
 			yamlBytes: []byte(`
 specUri: github.com/lovethedrake/bogus-spec
-specVersion: v0.1.0`,
+specVersion: v0.1.0
+jobs:
+  foo:
+    containers:
+    - name: demo
+      image: debian:stretch
+      command: echo foo`,
 			),
 			assertions: func(t *testing.T, _ Config, err error) {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), "github.com/lovethedrake/bogus-spec")
-				require.Contains(
-					t,
-					err.Error(),
-					"does not reference a supported specification",
-				)
+				require.Contains(t, err.Error(), "specUri must be one of the following")
+				require.Contains(t, err.Error(), "github.com/lovethedrake/drakespec")
 			},
 		},
 
 		{
 			name: "undefined specVersion field",
 			yamlBytes: []byte(`
-specUri: github.com/lovethedrake/drakespec`,
+specUri: github.com/lovethedrake/drakespec
+jobs:
+  foo:
+    containers:
+    - name: demo
+      image: debian:stretch
+      command: echo foo`,
 			),
 			assertions: func(t *testing.T, _ Config, err error) {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), "specVersion is a required field")
+				require.Contains(t, err.Error(), "specVersion is required")
 			},
 		},
 
@@ -56,33 +70,56 @@ specUri: github.com/lovethedrake/drakespec`,
 			name: "invalid specVersion field",
 			yamlBytes: []byte(`
 specUri: github.com/lovethedrake/drakespec
-specVersion: bogus`,
+specVersion: bogus
+jobs:
+  foo:
+    containers:
+    - name: demo
+      image: debian:stretch
+      command: echo foo`,
 			),
 			assertions: func(t *testing.T, _ Config, err error) {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), "bogus")
-				require.Contains(t, err.Error(), "is not a valid semantic version")
+				require.Contains(
+					t,
+					err.Error(),
+					"specVersion must be one of the following",
+				)
+				require.Contains(t, err.Error(), "v0.1.0")
 			},
 		},
 
-		{
-			name: "unsupported specVersion",
-			yamlBytes: []byte(`
-specUri: github.com/lovethedrake/drakespec
-specVersion: v1.0.0`,
-			),
-			assertions: func(t *testing.T, _ Config, err error) {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), "v1.0.0")
-				require.Contains(t, err.Error(), "is not a supported version")
-			},
-		},
+		// TODO: krancour: We assume all pre-GA / pre-v1.0.0 revisions of the
+		// DrakeSpec may contain breaking changes. As such, the JSON schema we're
+		// using to validate configuration currently enumerates ONE specific
+		// revision of the DrakeSpec as permissible in the specVersion field. When
+		// this changes in the future, the following chunk of commented code will be
+		// relevant again for testing how DrakeCore handles configuration that
+		// claims compliance with an unsupported revision of the DrakeSpec.
+		// 		{
+		// 			name: "unsupported specVersion",
+		// 			yamlBytes: []byte(`
+		// specUri: github.com/lovethedrake/drakespec
+		// specVersion: v1.0.0`,
+		// 			),
+		// 			assertions: func(t *testing.T, _ Config, err error) {
+		// 				require.Error(t, err)
+		// 				require.Contains(t, err.Error(), "v1.0.0")
+		// 				require.Contains(t, err.Error(), "is not a supported version")
+		// 			},
+		// 		},
 
 		{
 			name: "undefined job",
 			yamlBytes: []byte(`
 specUri: github.com/lovethedrake/drakespec
 specVersion: v0.1.0
+jobs:
+  bar:
+    containers:
+    - name: demo
+      image: debian:stretch
+      command: echo bar
 pipelines:
   foobar:
     jobs:
@@ -131,9 +168,10 @@ pipelines:
 			yamlBytes: []byte(`
 specUri: github.com/lovethedrake/drakespec
 specVersion: v0.1.0
-baseDemoContainer: &baseDemoContainer
-  name: demo
-  image: debian:stretch
+snippets:
+  baseDemoContainer: &baseDemoContainer
+    name: demo
+    image: debian:stretch
 jobs:
   foo:
     containers:
@@ -142,7 +180,7 @@ jobs:
   bar:
     containers:
     - <<: *baseDemoContainer
-    command: echo bar
+      command: echo bar
 pipelines:
   foobar:
     jobs:
@@ -223,9 +261,10 @@ pipelines:
 			yamlBytes: []byte(`
 specUri: github.com/lovethedrake/drakespec
 specVersion: v0.1.0
-baseDemoContainer: &baseDemoContainer
-  name: demo
-  image: debian:stretch
+snippets:
+  baseDemoContainer: &baseDemoContainer
+    name: demo
+    image: debian:stretch
 jobs:
   foo:
     containers:
@@ -234,7 +273,7 @@ jobs:
   bar:
     containers:
     - <<: *baseDemoContainer
-    command: echo bar
+      command: echo bar
 pipelines:
   foobar:
     triggers:

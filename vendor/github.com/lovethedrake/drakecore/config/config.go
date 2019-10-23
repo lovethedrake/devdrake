@@ -2,18 +2,18 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"sort"
 
-	"github.com/Masterminds/semver"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
+	"github.com/xeipuuv/gojsonschema"
 )
 
-const (
-	drakeSpecURI        = "github.com/lovethedrake/drakespec"
-	supportedVersionStr = "v0.1.0"
-)
+// TODO: krancour: This is currently checked by the JSON schema, but in the
+// future, this won't be the case.
+// const supportedVersionStr = "v0.1.0"
 
 // Config is a public interface for the root of the Drake configuration tree.
 type Config interface {
@@ -53,8 +53,30 @@ func NewConfigFromFile(configFilePath string) (Config, error) {
 
 // NewConfigFromYAML loads configuration from the specified YAML bytes.
 func NewConfigFromYAML(yamlBytes []byte) (Config, error) {
+
+	jsonBytes, err := yaml.YAMLToJSON(yamlBytes)
+	if err != nil {
+		return nil, errors.Wrap(err, "error converting YAML to JSON")
+	}
+	configLoader := gojsonschema.NewBytesLoader(jsonBytes)
+
+	schemaLoader := gojsonschema.NewBytesLoader(jsonSchemaBytes)
+
+	validationResult, err := gojsonschema.Validate(schemaLoader, configLoader)
+	if err != nil {
+		return nil, errors.Wrap(err, "error validating configuration")
+	}
+
+	if !validationResult.Valid() {
+		msg := "Configuration is invalid: "
+		for _, resErr := range validationResult.Errors() {
+			msg = fmt.Sprintf("%s\n- %s", msg, resErr)
+		}
+		return nil, errors.New(msg)
+	}
+
 	config := &config{}
-	err := yaml.Unmarshal(yamlBytes, config)
+	err = json.Unmarshal(jsonBytes, config)
 	return config, err
 }
 
@@ -83,40 +105,30 @@ func (c *config) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	// Check that we're dealing with configuration that explicitly claims
-	// compliance with the authentic DrakeSpec.
-	if flatCfg.SpecURI == "" {
-		return errors.New("specUri is a required field")
-	}
-	if flatCfg.SpecURI != drakeSpecURI {
-		return errors.Errorf(
-			"specUri %q does not reference a supported specification; only %q is "+
-				"supported.",
-			flatCfg.SpecURI,
-			drakeSpecURI,
-		)
-	}
-	// Check that specVersion is defined
-	if flatCfg.SpecVersion == "" {
-		return errors.New("specVersion is a required field")
-	}
-	// Check that specVersion is a valid semantic version
-	specVersion, err := semver.NewVersion(flatCfg.SpecVersion)
-	if err != nil {
-		return errors.Errorf(
-			"specVersion %q is not a valid semantic version",
-			flatCfg.SpecVersion,
-		)
-	}
-	// Check that specVersion is a supported semantic version
-	supportedVersion, _ := semver.NewVersion(supportedVersionStr)
-	if !specVersion.Equal(supportedVersion) {
-		return errors.Errorf(
-			"specVersion %q is not a supported version; only %q is supported.",
-			flatCfg.SpecVersion,
-			supportedVersionStr,
-		)
-	}
+	// TODO: krancour: We assume all pre-GA / pre-v1.0.0 revisions of the
+	// DrakeSpec may contain breaking changes. As such, the JSON schema we're
+	// using to validate configuration currently enumerates ONE specific revision
+	// of the DrakeSpec as permissible in the specVersion field. When this changes
+	// in the future, the following chunk of commented code will be relevant again
+	// for determining whether the configuration is supported.
+
+	// // Check that specVersion is a valid semantic version
+	// specVersion, err := semver.NewVersion(flatCfg.SpecVersion)
+	// if err != nil {
+	// 	return errors.Errorf(
+	// 		"specVersion %q is not a valid semantic version",
+	// 		flatCfg.SpecVersion,
+	// 	)
+	// }
+	// // Check that specVersion is a supported version
+	// supportedVersion, _ := semver.NewVersion(supportedVersionStr)
+	// if !specVersion.Equal(supportedVersion) {
+	// 	return errors.Errorf(
+	// 		"specVersion %q is not a supported version; only %q is supported.",
+	// 		flatCfg.SpecVersion,
+	// 		supportedVersionStr,
+	// 	)
+	// }
 
 	// Step through all flatJobs to populate a real job for each. While we're at
 	// it, create both a slice and a map of all jobs.
