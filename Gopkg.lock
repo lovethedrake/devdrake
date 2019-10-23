@@ -13,14 +13,6 @@
   revision = "d6e3b3328b783f23731bc4d058875b0371ff8109"
 
 [[projects]]
-  digest = "1:78d2a7d3aac5f79d447a0aa7f0acc10fa2006cbb70acfe2fb5369e3c0d6bfe7f"
-  name = "github.com/Masterminds/semver"
-  packages = ["."]
-  pruneopts = ""
-  revision = "fe7c21038085e01e67044ec1efe3afb1eaa59f75"
-  version = "v3.0.1"
-
-[[projects]]
   digest = "1:79882d9a567ed3015a12e4f59d0845ccb99efac07346cf8cf5c71b7e935ede84"
   name = "github.com/Microsoft/go-winio"
   packages = [
@@ -124,12 +116,12 @@
   version = "v1.0.2"
 
 [[projects]]
-  digest = "1:f060c2a33bab0fa3180bc40209524893ca46d3d86bd082ccaafc90e03c029650"
+  digest = "1:8b2a3f2dfb7cf6a970c272ba603ecd464b4140646d1851ebcaedc5d2b8ba4766"
   name = "github.com/lovethedrake/drakecore"
   packages = ["config"]
   pruneopts = ""
-  revision = "2a9210bcad64c8dd5a2470cfcfd4d6b325abc865"
-  version = "v0.5.1"
+  revision = "91fe901def6d09bc5b9ba6f48a41c85fa835b188"
+  version = "v0.6.0"
 
 [[projects]]
   digest = "1:0093a7c66d5b9e0cdaf4be5c20e0a9b889d1d839148eeed1d587e99b4cfd90ff"
@@ -189,6 +181,30 @@
   pruneopts = ""
   revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
   version = "v1.20.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:5372ed388f189f6204f1864a2bae1ce9bbdf33f47528ffc776d31a649e3978aa"
+  name = "github.com/xeipuuv/gojsonpointer"
+  packages = ["."]
+  pruneopts = ""
+  revision = "02993c407bfbf5f6dae44c4f4b1cf6a39b5fc5bb"
+
+[[projects]]
+  branch = "master"
+  digest = "1:604f98a38394d2805a78c462396a4992b93fdd5b7306130add330f1a99ac6b0a"
+  name = "github.com/xeipuuv/gojsonreference"
+  packages = ["."]
+  pruneopts = ""
+  revision = "bd5ef7bd5415a7ac448318e64f11a24cd21e594b"
+
+[[projects]]
+  digest = "1:d8392d33ffa61de4bbc62ca31af50f80a64e416ae132fb14709a4222a9cd326f"
+  name = "github.com/xeipuuv/gojsonschema"
+  packages = ["."]
+  pruneopts = ""
+  revision = "82fcdeb203eb6ab2a67d0a623d9c19e5e5a64927"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
