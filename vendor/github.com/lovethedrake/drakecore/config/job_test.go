@@ -26,3 +26,10 @@ func TestJobContainers(t *testing.T) {
 	}
 	require.Equal(t, job.containers, job.Containers())
 }
+
+func TestJobSourceMountMode(t *testing.T) {
+	job := &job{
+		sourceMountMode: SourceMountModeReadOnly,
+	}
+	require.Equal(t, job.sourceMountMode, job.SourceMountMode())
+}

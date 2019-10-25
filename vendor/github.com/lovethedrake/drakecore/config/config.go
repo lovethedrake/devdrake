@@ -84,7 +84,8 @@ func (c *config) UnmarshalJSON(data []byte) error {
 	// We have a lot of work to do to turn flat JSON into a rich object graph.
 	// We'll use these "flat" one-off types to facilitate this process.
 	type flatJob struct {
-		Containers []*container `json:"containers"`
+		Containers      []*container    `json:"containers"`
+		SourceMountMode SourceMountMode `json:"sourceMountMode"`
 	}
 	type flatPipelineJob struct {
 		Name         string   `json:"name"`
@@ -137,8 +138,12 @@ func (c *config) UnmarshalJSON(data []byte) error {
 	i := 0
 	for jobName, flatJob := range flatCfg.Jobs {
 		job := &job{
-			name:       jobName,
-			containers: make([]Container, len(flatJob.Containers)),
+			name:            jobName,
+			containers:      make([]Container, len(flatJob.Containers)),
+			sourceMountMode: flatJob.SourceMountMode,
+		}
+		if job.sourceMountMode == "" {
+			job.sourceMountMode = SourceMountModeReadOnly
 		}
 		for j, container := range flatJob.Containers {
 			job.containers[j] = container
@@ -191,6 +196,14 @@ func (c *config) UnmarshalJSON(data []byte) error {
 					"pipeline %q references undefined job %q",
 					pipeline.name,
 					flatPipelineJob.Name,
+				)
+			}
+			if pipelineJob.job.SourceMountMode() == SourceMountModeReadWrite {
+				return errors.Errorf(
+					"pipeline %q illegally references job %q with sourceMountMode %q",
+					pipeline.name,
+					flatPipelineJob.Name,
+					SourceMountModeReadWrite,
 				)
 			}
 			for h, dependencyName := range flatPipelineJob.Dependencies {

@@ -27,8 +27,12 @@ var jsonSchemaBytes = []byte(`
 				"containers": {
 					"type": "array",
 					"description": "The OCI containers that participate in the job",
-					"minItems": 1,
 					"items": { "$ref": "#/definitions/container" }
+				},
+				"sourceMountMode": {
+					"type": "string",
+					"description": "The mode to use if/when mounting source code into any of the job's containers",
+					"enum": [ "RO", "COPY", "RW" ]
 				}
 			}
 		},
@@ -77,6 +81,10 @@ var jsonSchemaBytes = []byte(`
 				"sourceMountPath": {
 					"type": "string",
 					"description": "Where within the container to mount project source code"
+				},
+				"sharedStorageMountPath": {
+					"type": "string",
+					"description": "Where within the container to mount shared storage"
 				}
 			}
 		},
@@ -84,7 +92,6 @@ var jsonSchemaBytes = []byte(`
 		"pipeline": {
 			"type": "object",
 			"description": "A single pipeline",
-			"required": ["jobs"],
 			"additionalProperties": false,
 			"properties": {
 				"triggers": {
@@ -95,7 +102,6 @@ var jsonSchemaBytes = []byte(`
 				"jobs": {
 					"type": "array",
 					"description": "The jobs that make up this pipeline",
-					"minItems": 1,
 					"items": { "$ref": "#/definitions/pipelineJob" }
 				}
 			}
@@ -144,7 +150,7 @@ var jsonSchemaBytes = []byte(`
 
   "title": "Config",
 	"type": "object",
-	"required": ["specUri", "specVersion", "jobs"],
+	"required": ["specUri", "specVersion"],
 	"additionalProperties": false,
   "properties": {
     "specUri": {
@@ -164,7 +170,6 @@ var jsonSchemaBytes = []byte(`
       "type": "object",
 			"description": "A map of jobs indexed by unique names",
 			"additionalProperties": false,
-			"minProperties": 1,
 			"patternProperties": {
 				"^\\w[\\w-]*$": { "$ref": "#/definitions/job" }
 			}

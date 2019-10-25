@@ -23,6 +23,9 @@ type Container interface {
 	// SourceMountPath returns a path to where project source should be mounted
 	// into the container
 	SourceMountPath() string
+	// SharedStorageMountPath returns a path to where shared storage should be
+	// mounted into the container
+	SharedStorageMountPath() string
 }
 
 type container struct {
@@ -35,6 +38,7 @@ type container struct {
 	IsPrivileged            bool     `json:"privileged"`
 	ShouldMountDockerSocket bool     `json:"mountDockerSocket"`
 	SrcMountPath            string   `json:"sourceMountPath"`
+	SharedStrgMountPath     string   `json:"sharedStorageMountPath"`
 }
 
 func (c *container) Name() string {
@@ -76,4 +80,8 @@ func (c *container) MountDockerSocket() bool {
 
 func (c *container) SourceMountPath() string {
 	return c.SrcMountPath
+}
+
+func (c *container) SharedStorageMountPath() string {
+	return c.SharedStrgMountPath
 }
