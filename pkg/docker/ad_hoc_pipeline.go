@@ -10,10 +10,13 @@ func NewAdHocPipeline(jobs []config.Job) config.Pipeline {
 	pipeline := &adHocPipeline{
 		jobs: make([]config.PipelineJob, len(jobs)),
 	}
+	var previousJob config.PipelineJob
 	for i, job := range jobs {
 		pipeline.jobs[i] = &adHocPipelineJob{
-			job: job,
+			job:        job,
+			dependency: previousJob,
 		}
+		previousJob = pipeline.jobs[i]
 	}
 	return pipeline
 }
@@ -31,7 +34,8 @@ func (a *adHocPipeline) Triggers() []config.PipelineTrigger {
 }
 
 type adHocPipelineJob struct {
-	job config.Job
+	job        config.Job
+	dependency config.PipelineJob
 }
 
 func (a *adHocPipelineJob) Job() config.Job {
@@ -39,5 +43,8 @@ func (a *adHocPipelineJob) Job() config.Job {
 }
 
 func (a *adHocPipelineJob) Dependencies() []config.PipelineJob {
-	return nil
+	if a.dependency == nil {
+		return nil
+	}
+	return []config.PipelineJob{a.dependency}
 }

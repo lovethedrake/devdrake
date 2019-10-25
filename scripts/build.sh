@@ -20,4 +20,4 @@ ldflags="-w -X $base_package_name/pkg/version.version=$rel_version -X $base_pack
 
 set -x
 
-GOOS=$goos GOARCH=$goarch go build -ldflags "$ldflags" -o bin/drake/drake-$goos-$goarch$file_ext ./cmd/drake
+GOOS=$goos GOARCH=$goarch go build -ldflags "$ldflags" -o /shared/bin/drake/drake-$goos-$goarch$file_ext ./cmd/drake

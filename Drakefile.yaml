@@ -65,6 +65,7 @@ jobs:
     containers:
     - <<: *baseGoContainer
       command: dep ensure -v
+    sourceMountMode: RW
 
 ################################################################################
 # Test jobs                                                                    #
@@ -78,7 +79,14 @@ jobs:
   test-unit:
     containers:
     - <<: *baseGoContainer
-      command: go test -timeout 30s -race -coverprofile=coverage.txt -covermode=atomic ./cmd/... ./pkg/...
+      command: go test -timeout 30s -race -coverprofile=/shared/coverage.txt -covermode=atomic ./cmd/... ./pkg/...
+      sharedStorageMountPath: /shared
+
+  upload-coverage-report:
+    containers:
+    - <<: *baseGoContainer
+      command: bash -c "bash <(curl -s https://codecov.io/bash) -f /shared/coverage.txt"
+      sharedStorageMountPath: /shared
 
   lint:
     containers:
@@ -89,17 +97,13 @@ jobs:
 # Build / publish jobs                                                         #
 ################################################################################
 
-  clean:
-    containers:
-    - <<: *baseGoContainer
-      command: rm -rf bin/
-
   build-linux-amd64:
     containers:
     - <<: *baseGoContainer
       environment:
       - CGO_ENABLED=0
       command: scripts/build.sh linux amd64
+      sharedStorageMountPath: /shared
 
   build-darwin-amd64:
     containers:
@@ -107,6 +111,7 @@ jobs:
       environment:
       - CGO_ENABLED=0
       command: scripts/build.sh darwin amd64
+      sharedStorageMountPath: /shared
 
   build-windows-amd64:
     containers:
@@ -114,11 +119,13 @@ jobs:
       environment:
       - CGO_ENABLED=0
       command: scripts/build.sh windows amd64
+      sharedStorageMountPath: /shared
 
   publish-binaries:
     containers:
     - <<: *baseGoContainer
       command: scripts/publish.sh
+      sharedStorageMountPath: /shared
 
 ################################################################################
 # Pipelines                                                                    #
@@ -154,6 +161,9 @@ pipelines:
     - name: lint
     - name: verify-vendored-code
     - name: test-unit
+    - name: upload-coverage-report
+      dependencies:
+      - test-unit
     - name: build-linux-amd64
       dependencies:
       - lint

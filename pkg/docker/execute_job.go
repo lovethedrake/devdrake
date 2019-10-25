@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 
 	dockerTypes "github.com/docker/docker/api/types"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/lovethedrake/devdrake/pkg/file"
 	"github.com/lovethedrake/drakecore/config"
 	"github.com/mattn/go-shellwords"
+	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 )
 
@@ -19,10 +22,50 @@ func (e *executor) executeJob(
 	secrets []string,
 	jobExecutionName string,
 	sourcePath string,
+	sharedStorageVolumeName string,
 	job config.Job,
 ) error {
 	if len(job.Containers()) == 0 {
 		return nil
+	}
+
+	// Make a copy of source in the working directory if that is what
+	// job configuration says to do
+	jobSrcPath := sourcePath
+	if job.SourceMountMode() == config.SourceMountModeCopy {
+		var jobNeedsSource bool
+		for _, container := range job.Containers() {
+			if container.SourceMountPath() != "" {
+				jobNeedsSource = true
+				break
+			}
+		}
+		if jobNeedsSource {
+			homePath, err := homedir.Dir()
+			if err != nil {
+				return errors.Wrap(err, "error finding home directory")
+			}
+			// TODO: Move this into its own package? This probably won't be the last
+			// time we need to find "devdrakeHome".
+			jobPath := path.Join(homePath, ".devdrake", "jobs", jobExecutionName)
+			if _, err := os.Stat(jobPath); err != nil {
+				if !os.IsNotExist(err) {
+					return errors.Wrapf(
+						err,
+						"error checkiong for existence of directory %s",
+						jobPath,
+					)
+				}
+				if err := os.MkdirAll(jobPath, 0755); err != nil {
+					return errors.Wrapf(err, "error creating directory %s", jobPath)
+				}
+			}
+			jobSrcPath = path.Join(jobPath, "src")
+			defer os.RemoveAll(jobPath) // nolint: errcheck
+			if err := file.CopyDir(sourcePath, jobSrcPath); err != nil {
+				return errors.Wrapf(err, "error copying source to %s", jobSrcPath)
+			}
+		}
 	}
 
 	containerIDs := make([]string, len(job.Containers()))
@@ -42,7 +85,9 @@ func (e *executor) executeJob(
 			ctx,
 			secrets,
 			jobExecutionName,
-			sourcePath,
+			jobSrcPath,
+			job.SourceMountMode(),
+			sharedStorageVolumeName,
 			networkContainerID,
 			container,
 		)
@@ -180,6 +225,8 @@ func (e *executor) createContainer(
 	secrets []string,
 	jobExecutionName string,
 	sourcePath string,
+	sourceMountMode config.SourceMountMode,
+	sharedStorageVolumeName string,
 	networkContainerID string,
 	container config.Container,
 ) (string, error) {
@@ -214,9 +261,23 @@ func (e *executor) createContainer(
 		hostConfig.Binds = []string{"/var/run/docker.sock:/var/run/docker.sock"}
 	}
 	if container.SourceMountPath() != "" {
+		containerSourceMountPath := container.SourceMountPath()
+		if sourceMountMode == config.SourceMountModeReadOnly {
+			containerSourceMountPath = fmt.Sprintf("%s:ro", containerSourceMountPath)
+		}
 		hostConfig.Binds = append(
 			hostConfig.Binds,
-			fmt.Sprintf("%s:%s", sourcePath, container.SourceMountPath()),
+			fmt.Sprintf("%s:%s", sourcePath, containerSourceMountPath),
+		)
+	}
+	if container.SharedStorageMountPath() != "" {
+		hostConfig.Binds = append(
+			hostConfig.Binds,
+			fmt.Sprintf(
+				"%s:%s",
+				sharedStorageVolumeName,
+				container.SharedStorageMountPath(),
+			),
 		)
 	}
 	fullContainerName := fmt.Sprintf(
