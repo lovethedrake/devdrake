@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"sync"
 
+	volumetypes "github.com/docker/docker/api/types/volume"
 	"github.com/lovethedrake/drakecore/config"
+	"github.com/pkg/errors"
 )
 
 func (e *executor) ExecutePipeline(
@@ -37,6 +39,41 @@ func (e *executor) ExecutePipeline(
 	// Pull all the images before executing anything.
 	if err := e.pullImages(ctx, imageNames); err != nil {
 		return err
+	}
+
+	// If ANY of the pipeline's jobs' containers mount shared storage, we need to
+	// create a volume.
+	var pipelineNeedsSharedStorage bool
+jobsLoop:
+	for _, pipelineJob := range pipeline.Jobs() {
+		for _, container := range pipelineJob.Job().Containers() {
+			if container.SharedStorageMountPath() != "" {
+				pipelineNeedsSharedStorage = true
+				break jobsLoop
+			}
+		}
+	}
+
+	pipelineExecutionName :=
+		fmt.Sprintf("%s-%s", e.namer.NameSep("-"), pipeline.Name())
+
+	var sharedStorageVolumeName string
+	if pipelineNeedsSharedStorage {
+		sharedStorageVolumeName =
+			fmt.Sprintf("%s-shared-storage", pipelineExecutionName)
+		if _, err := e.dockerClient.VolumeCreate(
+			ctx,
+			volumetypes.VolumesCreateBody{
+				Name: sharedStorageVolumeName,
+			},
+		); err != nil {
+			return errors.Wrapf(
+				err,
+				"error creating shared storage volume for pipeline %q",
+				pipeline.Name(),
+			)
+		}
+		defer e.forceRemoveVolumes(ctx, sharedStorageVolumeName)
 	}
 
 	if _, ok := pipeline.(*adHocPipeline); ok {
@@ -113,9 +150,6 @@ func (e *executor) ExecutePipeline(
 		close(jobsCh)
 	}()
 
-	pipelineExecutionName :=
-		fmt.Sprintf("%s-%s", e.namer.NameSep("-"), pipeline.Name())
-
 	// Fan out to maxConcurrency goroutines for actually executing jobs
 	executorsWg := &sync.WaitGroup{}
 	for i := 0; i < maxConcurrency; i++ {
@@ -133,6 +167,7 @@ func (e *executor) ExecutePipeline(
 						secrets,
 						fmt.Sprintf("%s-%s", pipelineExecutionName, job.Job().Name()),
 						e.sourcePath,
+						sharedStorageVolumeName,
 						job.Job(),
 					); err != nil {
 						// This errCh write isn't in a select because we don't want it to be
@@ -191,4 +226,16 @@ errLoop:
 		return errs[0]
 	}
 	return nil
+}
+
+func (e *executor) forceRemoveVolumes(
+	ctx context.Context,
+	volumeNames ...string,
+) {
+	for _, volumeName := range volumeNames {
+		if err := e.dockerClient.VolumeRemove(ctx, volumeName, true); err != nil {
+			// TODO: Maybe this isn't the best way to deal with this
+			fmt.Printf(`error removing volume "%s": %s`, volumeName, err)
+		}
+	}
 }
