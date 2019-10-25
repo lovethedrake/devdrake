@@ -75,3 +75,14 @@ func TestContainerSourceMountPath(t *testing.T) {
 	}
 	require.Equal(t, container.SrcMountPath, container.SourceMountPath())
 }
+
+func TestContainerSharedStorageMountPath(t *testing.T) {
+	container := &container{
+		SharedStrgMountPath: "/var/shared",
+	}
+	require.Equal(
+		t,
+		container.SharedStrgMountPath,
+		container.SharedStorageMountPath(),
+	)
+}

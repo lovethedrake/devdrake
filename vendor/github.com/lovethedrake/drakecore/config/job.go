@@ -1,16 +1,27 @@
 package config
 
+type SourceMountMode string
+
+const (
+	SourceMountModeReadOnly  SourceMountMode = "RO"
+	SourceMountModeCopy      SourceMountMode = "COPY"
+	SourceMountModeReadWrite SourceMountMode = "RW"
+)
+
 // Job is a public interface for job configuration.
 type Job interface {
 	// Name returns the job's name
 	Name() string
 	// Containers returns this job's containers
 	Containers() []Container
+	// Returns the job's SourceMountMode
+	SourceMountMode() SourceMountMode
 }
 
 type job struct {
-	name       string
-	containers []Container
+	name            string
+	containers      []Container
+	sourceMountMode SourceMountMode
 }
 
 func (j *job) Name() string {
@@ -24,4 +35,8 @@ func (j *job) Containers() []Container {
 	containers := make([]Container, len(j.containers))
 	copy(containers, j.containers)
 	return containers
+}
+
+func (j *job) SourceMountMode() SourceMountMode {
+	return j.sourceMountMode
 }

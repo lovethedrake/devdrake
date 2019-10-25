@@ -20,6 +20,7 @@ jobs:
     containers:
     - <<: *baseGoContainer
       command: dep ensure -v
+    sourceMountMode: RW
 
 ################################################################################
 # Test jobs                                                                    #
@@ -33,12 +34,14 @@ jobs:
   test:
     containers:
     - <<: *baseGoContainer
-      command: go test -timeout 30s -race -coverprofile=coverage.txt -covermode=atomic ./...
+      command: go test -timeout 30s -race -coverprofile=/shared/coverage.txt -covermode=atomic ./...
+      sharedStorageMountPath: /shared
 
   upload-coverage-report:
     containers:
     - <<: *baseGoContainer
-      command: bash -c "bash <(curl -s https://codecov.io/bash)"
+      command: bash -c "bash <(curl -s https://codecov.io/bash) -f /shared/coverage.txt"
+      sharedStorageMountPath: /shared
 
   lint:
     containers:
