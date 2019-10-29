@@ -116,12 +116,12 @@
   version = "v1.0.2"
 
 [[projects]]
-  digest = "1:8b2a3f2dfb7cf6a970c272ba603ecd464b4140646d1851ebcaedc5d2b8ba4766"
+  digest = "1:73370968a705f3cfee349a6f4f662d03014c3ea0667be51baf92fe09496f7199"
   name = "github.com/lovethedrake/drakecore"
   packages = ["config"]
   pruneopts = ""
-  revision = "91fe901def6d09bc5b9ba6f48a41c85fa835b188"
-  version = "v0.6.0"
+  revision = "2426b6fca8b1768abcb6383c09e7abf8cbf2213c"
+  version = "v0.7.0"
 
 [[projects]]
   digest = "1:0093a7c66d5b9e0cdaf4be5c20e0a9b889d1d839148eeed1d587e99b4cfd90ff"
@@ -130,6 +130,14 @@
   pruneopts = ""
   revision = "a72fbe27a1b0ed0df2f02754945044ce1456608b"
   version = "v1.0.5"
+
+[[projects]]
+  digest = "1:6dbb0eb72090871f2e58d1e37973fe3cb8c0f45f49459398d3fc740cb30e13bd"
+  name = "github.com/mitchellh/go-homedir"
+  packages = ["."]
+  pruneopts = ""
+  revision = "af06845cf3004701891bf4fdb884bfe4920b3727"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:5d9b668b0b4581a978f07e7d2e3314af18eb27b3fb5d19b70185b7c575723d11"
@@ -244,11 +252,13 @@
   input-imports = [
     "github.com/docker/docker/api/types",
     "github.com/docker/docker/api/types/container",
+    "github.com/docker/docker/api/types/volume",
     "github.com/docker/docker/client",
     "github.com/docker/docker/pkg/jsonmessage",
     "github.com/docker/docker/pkg/stdcopy",
     "github.com/lovethedrake/drakecore/config",
     "github.com/mattn/go-shellwords",
+    "github.com/mitchellh/go-homedir",
     "github.com/pkg/errors",
     "github.com/technosophos/moniker",
     "github.com/urfave/cli",

@@ -164,6 +164,34 @@ pipelines:
 		},
 
 		{
+			name: "pipeline references job with sourceMountMode RW",
+			yamlBytes: []byte(`
+specUri: github.com/lovethedrake/drakespec
+specVersion: v0.1.0
+jobs:
+  foo:
+    containers:
+    - name: demo
+      image: debian:stretch
+      command: echo foo  
+    sourceMountMode: RW
+pipelines:
+  foobar:
+    jobs:
+    - name: foo`,
+			),
+			assertions: func(t *testing.T, _ Config, err error) {
+				require.Error(t, err)
+				require.Contains(
+					t,
+					err.Error(),
+					`pipeline "foobar" illegally references job "foo" with `+
+						`sourceMountMode "RW"`,
+				)
+			},
+		},
+
+		{
 			name: "job dependency does not precede job in pipeline",
 			yamlBytes: []byte(`
 specUri: github.com/lovethedrake/drakespec
@@ -274,6 +302,7 @@ jobs:
     containers:
     - <<: *baseDemoContainer
       command: echo bar
+    sourceMountMode: COPY
 pipelines:
   foobar:
     triggers:
@@ -312,6 +341,10 @@ pipelines:
 				// In the expected order
 				require.Equal(t, "foo", jobs[0].Name())
 				require.Equal(t, "bar", jobs[1].Name())
+				// Check that job "foo" has the correct default sourceMountMode (RO)
+				require.Equal(t, SourceMountModeReadOnly, jobs[0].SourceMountMode())
+				// Check that job "bar" overrides the default sourceMountMode
+				require.Equal(t, SourceMountModeCopy, jobs[1].SourceMountMode())
 
 				pipelines := cfg.AllPipelines()
 				// We got the expected number of pipelines
