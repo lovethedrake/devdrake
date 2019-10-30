@@ -20,28 +20,22 @@ jobs:
 # Demo jobs                                                                    #
 ################################################################################
 
-  env:
-    containers:
-    - name: env
-      image: debian:stretch
-      sourceMountPath: /go/src/github.com/lovethedrake/devdrake
-      workingDirectory: /go/src/github.com/lovethedrake/devdrake
-      command: scripts/demo/env.sh
-
   foo:
     containers:
     - <<: *baseDemoContainer
-      command: echo foo
+      command: ["echo"]
+      args: ["foo"]
 
   bar:
     containers:
     - <<: *baseDemoContainer
-      command: echo bar
+      command: ["echo"]
+      args: ["bar"]
 
   fail:
     containers:
     - <<: *baseDemoContainer
-      command: "false"
+      command: ["false"]
 
   # This job demonstrates two containers networked together.
   # This doesn't work in Brigade / k8s yet because job / pod completion is based
@@ -55,7 +49,7 @@ jobs:
       image: redis:latest
       sourceMountPath: /demo
       workingDirectory: /demo
-      command: scripts/demo/redis.sh
+      command: ["scripts/demo/redis.sh"]
 
 ################################################################################
 # Utility jobs                                                                 #
@@ -64,7 +58,8 @@ jobs:
   dep:
     containers:
     - <<: *baseGoContainer
-      command: dep ensure -v
+      command: ["dep", "ensure"]
+      args: ["-v"]
     sourceMountMode: RW
 
 ################################################################################
@@ -74,24 +69,36 @@ jobs:
   verify-vendored-code:
     containers:
     - <<: *baseGoContainer
-      command: dep check
+      command: ["dep", "check"]
 
   test-unit:
     containers:
     - <<: *baseGoContainer
-      command: go test -timeout 30s -race -coverprofile=/shared/coverage.txt -covermode=atomic ./cmd/... ./pkg/...
+      command: ["go", "test"]
+      args:
+      - -timeout
+      - 30s
+      - -race
+      - -coverprofile=/shared/coverage.txt
+      - -covermode=atomic
+      - ./cmd/...
+      - ./pkg/...
       sharedStorageMountPath: /shared
 
   upload-coverage-report:
     containers:
     - <<: *baseGoContainer
-      command: bash -c "bash <(curl -s https://codecov.io/bash) -f /shared/coverage.txt"
+      command: ["bash", "-c"]
+      args: ["bash <(curl -s https://codecov.io/bash) -f /shared/coverage.txt"]
       sharedStorageMountPath: /shared
 
   lint:
     containers:
     - <<: *baseGoContainer
-      command: golangci-lint run ./cmd/... ./pkg/...
+      command: ["golangci-lint", "run"]
+      args:
+      - ./cmd/...
+      - ./pkg/...
 
 ################################################################################
 # Build / publish jobs                                                         #
@@ -102,7 +109,8 @@ jobs:
     - <<: *baseGoContainer
       environment:
       - CGO_ENABLED=0
-      command: scripts/build.sh linux amd64
+      command: ["scripts/build.sh"]
+      args: ["linux", "amd64"]
       sharedStorageMountPath: /shared
 
   build-darwin-amd64:
@@ -110,7 +118,8 @@ jobs:
     - <<: *baseGoContainer
       environment:
       - CGO_ENABLED=0
-      command: scripts/build.sh darwin amd64
+      command: ["scripts/build.sh"]
+      args: ["darwin", "amd64"]
       sharedStorageMountPath: /shared
 
   build-windows-amd64:
@@ -118,13 +127,14 @@ jobs:
     - <<: *baseGoContainer
       environment:
       - CGO_ENABLED=0
-      command: scripts/build.sh windows amd64
+      command: ["scripts/build.sh"]
+      args: ["windows", "amd64"]
       sharedStorageMountPath: /shared
 
   publish-binaries:
     containers:
     - <<: *baseGoContainer
-      command: scripts/publish.sh
+      command: ["scripts/publish.sh"]
       sharedStorageMountPath: /shared
 
 ################################################################################
