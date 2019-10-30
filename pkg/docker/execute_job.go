@@ -12,7 +12,6 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/lovethedrake/devdrake/pkg/file"
 	"github.com/lovethedrake/drakecore/config"
-	"github.com/mattn/go-shellwords"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 )
@@ -241,13 +240,13 @@ func (e *executor) createContainer(
 		AttachStdout: true,
 		AttachStderr: true,
 	}
-	if container.Command() != "" {
-		var cmd []string
-		cmd, err := shellwords.Parse(container.Command())
-		if err != nil {
-			return "", errors.Wrap(err, "error parsing container command")
-		}
-		containerConfig.Cmd = cmd
+	cmd := container.Command()
+	if len(cmd) > 0 {
+		containerConfig.Entrypoint = cmd
+	}
+	args := container.Args()
+	if len(args) > 0 {
+		containerConfig.Cmd = args
 	}
 	hostConfig := &dockerContainer.HostConfig{
 		Privileged: container.Privileged(),

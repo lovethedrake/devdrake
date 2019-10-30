@@ -10,8 +10,11 @@ type Container interface {
 	Environment() []string
 	// WorkingDirectory returns the container's working directory
 	WorkingDirectory() string
-	// Command returns the command that should be run in the container
-	Command() string
+	// Command returns the command (entrypoint) that should be run in the
+	// container
+	Command() []string
+	// Args returns the arguments for the command
+	Args() []string
 	// TTY returns an indicator of whether the container should use TTY or not
 	TTY() bool
 	// Privileged returns an indicator of whether the container should be
@@ -33,7 +36,8 @@ type container struct {
 	Img                     string   `json:"image"`
 	Env                     []string `json:"environment"`
 	WorkDir                 string   `json:"workingDirectory"`
-	Cmd                     string   `json:"command"`
+	Cmd                     []string `json:"command"`
+	Arguments               []string `json:"args"`
 	IsTTY                   bool     `json:"tty"`
 	IsPrivileged            bool     `json:"privileged"`
 	ShouldMountDockerSocket bool     `json:"mountDockerSocket"`
@@ -62,8 +66,22 @@ func (c *container) WorkingDirectory() string {
 	return c.WorkDir
 }
 
-func (c *container) Command() string {
-	return c.Cmd
+func (c *container) Command() []string {
+	// We don't want any alterations a caller may make to the slice we return to
+	// affect the containers's own Cmd slice, which we'd like to treat as
+	// immutable, so we return a COPY of that slice.
+	cmd := make([]string, len(c.Cmd))
+	copy(cmd, c.Cmd)
+	return cmd
+}
+
+func (c *container) Args() []string {
+	// We don't want any alterations a caller may make to the slice we return to
+	// affect the containers's own Arguments slice, which we'd like to treat as
+	// immutable, so we return a COPY of that slice.
+	args := make([]string, len(c.Arguments))
+	copy(args, c.Arguments)
+	return args
 }
 
 func (c *container) TTY() bool {

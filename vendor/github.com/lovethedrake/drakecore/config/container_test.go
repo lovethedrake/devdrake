@@ -39,9 +39,16 @@ func TestContainerWorkingDirectory(t *testing.T) {
 
 func TestContainerCommand(t *testing.T) {
 	container := &container{
-		Cmd: "echo foo",
+		Cmd: []string{"echo"},
 	}
 	require.Equal(t, container.Cmd, container.Command())
+}
+
+func TestContainerArgs(t *testing.T) {
+	container := &container{
+		Arguments: []string{"foo"},
+	}
+	require.Equal(t, container.Arguments, container.Args())
 }
 
 func TestContainerTTY(t *testing.T) {
