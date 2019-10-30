@@ -22,7 +22,8 @@ jobs:
     containers:
     - name: demo
       image: debian:stretch
-      command: echo foo`,
+      command: ["echo"]
+      args: ["foo"]`,
 			),
 			assertions: func(t *testing.T, _ Config, err error) {
 				require.Error(t, err)
@@ -40,7 +41,8 @@ jobs:
     containers:
     - name: demo
       image: debian:stretch
-      command: echo foo`,
+      command: ["echo"]
+      args: ["foo"]`,
 			),
 			assertions: func(t *testing.T, _ Config, err error) {
 				require.Error(t, err)
@@ -58,7 +60,8 @@ jobs:
     containers:
     - name: demo
       image: debian:stretch
-      command: echo foo`,
+      command: ["echo"]
+      args: ["foo"]`,
 			),
 			assertions: func(t *testing.T, _ Config, err error) {
 				require.Error(t, err)
@@ -76,7 +79,8 @@ jobs:
     containers:
     - name: demo
       image: debian:stretch
-      command: echo foo`,
+      command: ["echo"]
+      args: ["foo"]`,
 			),
 			assertions: func(t *testing.T, _ Config, err error) {
 				require.Error(t, err)
@@ -119,7 +123,8 @@ jobs:
     containers:
     - name: demo
       image: debian:stretch
-      command: echo bar
+      command: ["echo"]
+      args: ["bar"]
 pipelines:
   foobar:
     jobs:
@@ -145,7 +150,8 @@ jobs:
     containers:
     - name: demo
       image: debian:stretch
-      command: echo bar  
+      command: ["echo"]
+      args: ["bar"]
 pipelines:
   foobar:
     jobs:
@@ -173,7 +179,8 @@ jobs:
     containers:
     - name: demo
       image: debian:stretch
-      command: echo foo  
+      command: ["echo"]
+      args: ["foo"]
     sourceMountMode: RW
 pipelines:
   foobar:
@@ -204,11 +211,13 @@ jobs:
   foo:
     containers:
     - <<: *baseDemoContainer
-      command: echo foo
+      command: ["echo"]
+      args: ["foo"]
   bar:
     containers:
     - <<: *baseDemoContainer
-      command: echo bar
+      command: ["echo"]
+      args: ["bar"]
 pipelines:
   foobar:
     jobs:
@@ -237,7 +246,8 @@ jobs:
     containers:
     - name: demo
       image: debian:stretch
-      command: echo foo
+      command: ["echo"]
+      args: ["foo"]
 pipelines:
   foobar:
     jobs:
@@ -266,7 +276,8 @@ jobs:
     containers:
     - name: demo
       image: debian:stretch
-      command: echo foo
+      command: ["echo"]
+      args: ["foo"]
 pipelines:
   foobar:
     jobs:
@@ -297,11 +308,13 @@ jobs:
   foo:
     containers:
     - <<: *baseDemoContainer
-      command: echo foo
+      command: ["echo"]
+      args: ["foo"]
   bar:
     containers:
     - <<: *baseDemoContainer
-      command: echo bar
+      command: ["echo"]
+      args: ["bar"]
     sourceMountMode: COPY
 pipelines:
   foobar:

@@ -116,20 +116,12 @@
   version = "v1.0.2"
 
 [[projects]]
-  digest = "1:73370968a705f3cfee349a6f4f662d03014c3ea0667be51baf92fe09496f7199"
+  digest = "1:cb5c0f5ec8151321a2a90c2e5b59a8a65bda94e5bb3142c8d1dd991b19bb7f1e"
   name = "github.com/lovethedrake/drakecore"
   packages = ["config"]
   pruneopts = ""
-  revision = "2426b6fca8b1768abcb6383c09e7abf8cbf2213c"
-  version = "v0.7.0"
-
-[[projects]]
-  digest = "1:0093a7c66d5b9e0cdaf4be5c20e0a9b889d1d839148eeed1d587e99b4cfd90ff"
-  name = "github.com/mattn/go-shellwords"
-  packages = ["."]
-  pruneopts = ""
-  revision = "a72fbe27a1b0ed0df2f02754945044ce1456608b"
-  version = "v1.0.5"
+  revision = "f0769465c69b3b975a3be24076ce5edff5f0f028"
+  version = "v0.8.0"
 
 [[projects]]
   digest = "1:6dbb0eb72090871f2e58d1e37973fe3cb8c0f45f49459398d3fc740cb30e13bd"
@@ -257,7 +249,6 @@
     "github.com/docker/docker/pkg/jsonmessage",
     "github.com/docker/docker/pkg/stdcopy",
     "github.com/lovethedrake/drakecore/config",
-    "github.com/mattn/go-shellwords",
     "github.com/mitchellh/go-homedir",
     "github.com/pkg/errors",
     "github.com/technosophos/moniker",

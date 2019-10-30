@@ -63,8 +63,18 @@ var jsonSchemaBytes = []byte(`
 					"description": "The working directory for the container's main process"
 				},
 				"command": {
-					"type": "string",
-					"description": "The command for launching the container's main process"
+					"type": "array",
+					"description": "Override the container's ENTRYPOINT",
+					"items": {
+						"type": "string"
+					}
+				},
+				"args": {
+					"type": "array",
+					"description": "Override the container's CMD",
+					"items": {
+						"type": "string"
+					}
 				},
 				"tty": {
 					"type": "boolean",
