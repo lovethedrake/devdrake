@@ -163,7 +163,11 @@ pipelines:
     - specUri: github.com/lovethedrake/drakespec-github
       specVersion: v1.0.0
       config:
-        checkSuiteRequest:
+        pullRequest:
+          targetBranches:
+            only:
+            - /.*/
+        push:
           branches:
             only:
             - /.*/
@@ -199,7 +203,7 @@ pipelines:
     - specUri: github.com/lovethedrake/drakespec-github
       specVersion: v1.0.0
       config:
-        tagPush:
+        push:
           tags:
             only:
             - /v[0-9]+(\.[0-9]+)*(\-.+)?/
