@@ -1,5 +1,5 @@
 specUri: github.com/lovethedrake/drakespec
-specVersion: v0.1.0
+specVersion: v0.2.0
 
 snippets:
 
@@ -21,20 +21,20 @@ jobs:
 ################################################################################
 
   foo:
-    containers:
-    - <<: *baseDemoContainer
+    primaryContainer:
+      <<: *baseDemoContainer
       command: ["echo"]
       args: ["foo"]
 
   bar:
-    containers:
-    - <<: *baseDemoContainer
+    primaryContainer:
+      <<: *baseDemoContainer
       command: ["echo"]
       args: ["bar"]
 
   fail:
-    containers:
-    - <<: *baseDemoContainer
+    primaryContainer:
+      <<: *baseDemoContainer
       command: ["false"]
 
   # This job demonstrates two containers networked together.
@@ -42,10 +42,11 @@ jobs:
   # on ALL containers having exited and the redis sidecar never will. There's
   # a KEP open to fix this.
   redis:
-    containers:
+    sidecarContainers:
     - name: redis
       image: redis:latest
-    - name: redis-cli
+    primaryContainer:
+      name: redis-cli
       image: redis:latest
       sourceMountPath: /demo
       workingDirectory: /demo
@@ -56,8 +57,8 @@ jobs:
 ################################################################################
 
   dep:
-    containers:
-    - <<: *baseGoContainer
+    primaryContainer:
+      <<: *baseGoContainer
       command: ["dep", "ensure"]
       args: ["-v"]
     sourceMountMode: RW
@@ -67,13 +68,13 @@ jobs:
 ################################################################################
 
   verify-vendored-code:
-    containers:
-    - <<: *baseGoContainer
+    primaryContainer:
+      <<: *baseGoContainer
       command: ["dep", "check"]
 
   test-unit:
-    containers:
-    - <<: *baseGoContainer
+    primaryContainer:
+      <<: *baseGoContainer
       command: ["go", "test"]
       args:
       - -timeout
@@ -86,15 +87,15 @@ jobs:
       sharedStorageMountPath: /shared
 
   upload-coverage-report:
-    containers:
-    - <<: *baseGoContainer
+    primaryContainer:
+      <<: *baseGoContainer
       command: ["bash", "-c"]
       args: ["bash <(curl -s https://codecov.io/bash) -f /shared/coverage.txt"]
       sharedStorageMountPath: /shared
 
   lint:
-    containers:
-    - <<: *baseGoContainer
+    primaryContainer:
+      <<: *baseGoContainer
       command: ["golangci-lint", "run"]
       args:
       - ./cmd/...
@@ -105,8 +106,8 @@ jobs:
 ################################################################################
 
   build-linux-amd64:
-    containers:
-    - <<: *baseGoContainer
+    primaryContainer:
+      <<: *baseGoContainer
       environment:
       - CGO_ENABLED=0
       command: ["scripts/build.sh"]
@@ -114,8 +115,8 @@ jobs:
       sharedStorageMountPath: /shared
 
   build-darwin-amd64:
-    containers:
-    - <<: *baseGoContainer
+    primaryContainer:
+      <<: *baseGoContainer
       environment:
       - CGO_ENABLED=0
       command: ["scripts/build.sh"]
@@ -123,8 +124,8 @@ jobs:
       sharedStorageMountPath: /shared
 
   build-windows-amd64:
-    containers:
-    - <<: *baseGoContainer
+    primaryContainer:
+      <<: *baseGoContainer
       environment:
       - CGO_ENABLED=0
       command: ["scripts/build.sh"]
@@ -132,8 +133,8 @@ jobs:
       sharedStorageMountPath: /shared
 
   publish-binaries:
-    containers:
-    - <<: *baseGoContainer
+    primaryContainer:
+      <<: *baseGoContainer
       command: ["scripts/publish.sh"]
       sharedStorageMountPath: /shared
 
