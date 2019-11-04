@@ -6,6 +6,8 @@ type adHocPipeline struct {
 	jobs []config.PipelineJob
 }
 
+// NewAdHocPipeline constructs a new config.Pipeline from the provided
+// config.Jobs.
 func NewAdHocPipeline(jobs []config.Job) config.Pipeline {
 	pipeline := &adHocPipeline{
 		jobs: make([]config.PipelineJob, len(jobs)),
