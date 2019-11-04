@@ -1,10 +1,16 @@
 package config
 
+// SourceMountMode represents the different methods for mounting source code
+// into an OCI container
 type SourceMountMode string
 
 const (
-	SourceMountModeReadOnly  SourceMountMode = "RO"
-	SourceMountModeCopy      SourceMountMode = "COPY"
+	// SourceMountModeReadOnly represents source code mounted in read-only fashion
+	SourceMountModeReadOnly SourceMountMode = "RO"
+	// SourceMountModeCopy represents source code mounted as a writable copy
+	SourceMountModeCopy SourceMountMode = "COPY"
+	// SourceMountModeReadWrite represents source code mounted in a writeable
+	// fashion
 	SourceMountModeReadWrite SourceMountMode = "RW"
 )
 
@@ -12,29 +18,36 @@ const (
 type Job interface {
 	// Name returns the job's name
 	Name() string
-	// Containers returns this job's containers
-	Containers() []Container
-	// Returns the job's SourceMountMode
+	// PrimaryContainer returns this job's primary container
+	PrimaryContainer() Container
+	// SidecarContainers returns this job's sidecar containers
+	SidecarContainers() []Container
+	// SourceMountMode returns the job's SourceMountMode
 	SourceMountMode() SourceMountMode
 }
 
 type job struct {
-	name            string
-	containers      []Container
-	sourceMountMode SourceMountMode
+	name              string
+	primaryContainer  Container
+	sidecarContainers []Container
+	sourceMountMode   SourceMountMode
 }
 
 func (j *job) Name() string {
 	return j.name
 }
 
-func (j *job) Containers() []Container {
+func (j *job) PrimaryContainer() Container {
+	return j.primaryContainer
+}
+
+func (j *job) SidecarContainers() []Container {
 	// We don't want any alterations a caller may make to the slice we return to
 	// affect the job's own containers slice, which we'd like to treat as
 	// immutable, so we return a COPY of that slice.
-	containers := make([]Container, len(j.containers))
-	copy(containers, j.containers)
-	return containers
+	sidecarContainers := make([]Container, len(j.sidecarContainers))
+	copy(sidecarContainers, j.sidecarContainers)
+	return sidecarContainers
 }
 
 func (j *job) SourceMountMode() SourceMountMode {

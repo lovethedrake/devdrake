@@ -13,7 +13,7 @@ import (
 
 // TODO: krancour: This is currently checked by the JSON schema, but in the
 // future, this won't be the case.
-// const supportedVersionStr = "v0.1.0"
+// const supportedVersionStr = "v0.2.0"
 
 // Config is a public interface for the root of the Drake configuration tree.
 type Config interface {
@@ -84,8 +84,9 @@ func (c *config) UnmarshalJSON(data []byte) error {
 	// We have a lot of work to do to turn flat JSON into a rich object graph.
 	// We'll use these "flat" one-off types to facilitate this process.
 	type flatJob struct {
-		Containers      []*container    `json:"containers"`
-		SourceMountMode SourceMountMode `json:"sourceMountMode"`
+		PrimaryContainer  *container      `json:"primaryContainer"`
+		SidecarContainers []*container    `json:"sidecarContainers"`
+		SourceMountMode   SourceMountMode `json:"sourceMountMode"`
 	}
 	type flatPipelineJob struct {
 		Name         string   `json:"name"`
@@ -138,15 +139,16 @@ func (c *config) UnmarshalJSON(data []byte) error {
 	i := 0
 	for jobName, flatJob := range flatCfg.Jobs {
 		job := &job{
-			name:            jobName,
-			containers:      make([]Container, len(flatJob.Containers)),
-			sourceMountMode: flatJob.SourceMountMode,
+			name:              jobName,
+			primaryContainer:  flatJob.PrimaryContainer,
+			sidecarContainers: make([]Container, len(flatJob.SidecarContainers)),
+			sourceMountMode:   flatJob.SourceMountMode,
 		}
 		if job.sourceMountMode == "" {
 			job.sourceMountMode = SourceMountModeReadOnly
 		}
-		for j, container := range flatJob.Containers {
-			job.containers[j] = container
+		for j, sidecarContainer := range flatJob.SidecarContainers {
+			job.sidecarContainers[j] = sidecarContainer
 		}
 		c.jobs[i] = job
 		c.jobsByName[job.name] = job
