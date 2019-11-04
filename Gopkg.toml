@@ -26,4 +26,8 @@
 
 [[constraint]]
   name = "github.com/lovethedrake/drakecore"
-  version = "v0.8.0"
+  version = "v0.9.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true
