@@ -32,7 +32,8 @@ func (e *executor) ExecutePipeline(
 	// Build a set of all the image names required for this pipeline.
 	imageNames := map[string]struct{}{}
 	for _, job := range pipeline.Jobs() {
-		for _, container := range job.Job().Containers() {
+		imageNames[job.Job().PrimaryContainer().Image()] = struct{}{}
+		for _, container := range job.Job().SidecarContainers() {
 			imageNames[container.Image()] = struct{}{}
 		}
 	}
@@ -46,8 +47,12 @@ func (e *executor) ExecutePipeline(
 	var pipelineNeedsSharedStorage bool
 jobsLoop:
 	for _, pipelineJob := range pipeline.Jobs() {
-		for _, container := range pipelineJob.Job().Containers() {
-			if container.SharedStorageMountPath() != "" {
+		if pipelineJob.Job().PrimaryContainer().SharedStorageMountPath() != "" {
+			pipelineNeedsSharedStorage = true
+			break jobsLoop
+		}
+		for _, sidecarContainer := range pipelineJob.Job().SidecarContainers() {
+			if sidecarContainer.SharedStorageMountPath() != "" {
 				pipelineNeedsSharedStorage = true
 				break jobsLoop
 			}

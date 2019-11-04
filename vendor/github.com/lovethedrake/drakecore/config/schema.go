@@ -21,12 +21,16 @@ var jsonSchemaBytes = []byte(`
 		"job": {
 			"type": "object",
 			"description": "A single job",
-			"required": ["containers"],
+			"required": ["primaryContainer"],
 			"additionalProperties": false,
 			"properties": {
-				"containers": {
+				"primaryContainer": {
+					"allOf": [{ "$ref": "#/definitions/container" }],
+					"description": "The main OCI container that implements the job"
+				},
+				"sidecarContainers": {
 					"type": "array",
-					"description": "The OCI containers that participate in the job",
+					"description": "OCI containers that play a supporting role in the job",
 					"items": { "$ref": "#/definitions/container" }
 				},
 				"sourceMountMode": {
@@ -171,7 +175,7 @@ var jsonSchemaBytes = []byte(`
 		"specVersion": {
 			"type": "string",
 			"description": "The revision of the specification with which this configuration complies",
-			"enum": [ "v0.1.0" ]
+			"enum": [ "v0.2.0" ]
 		},
 		"snippets": {
 			"type": "object"

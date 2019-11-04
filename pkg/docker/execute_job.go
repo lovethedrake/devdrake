@@ -24,19 +24,21 @@ func (e *executor) executeJob(
 	sharedStorageVolumeName string,
 	job config.Job,
 ) error {
-	if len(job.Containers()) == 0 {
-		return nil
-	}
-
+	primaryContainer := job.PrimaryContainer()
 	// Make a copy of source in the working directory if that is what
 	// job configuration says to do
 	jobSrcPath := sourcePath
 	if job.SourceMountMode() == config.SourceMountModeCopy {
 		var jobNeedsSource bool
-		for _, container := range job.Containers() {
-			if container.SourceMountPath() != "" {
-				jobNeedsSource = true
-				break
+		if primaryContainer.SourceMountPath() != "" {
+			jobNeedsSource = true
+		}
+		if !jobNeedsSource {
+			for _, sidecarContainer := range job.SidecarContainers() {
+				if sidecarContainer.SourceMountPath() != "" {
+					jobNeedsSource = true
+					break
+				}
 			}
 		}
 		if jobNeedsSource {
@@ -67,20 +69,18 @@ func (e *executor) executeJob(
 		}
 	}
 
-	containerIDs := make([]string, len(job.Containers()))
+	// Slice big enough for the primary container and all sidecars
+	containerIDs := make([]string, 1+len(job.SidecarContainers()))
 
 	// Ensure cleanup of all containers
 	defer e.forceRemoveContainers(context.Background(), containerIDs...)
 
 	fmt.Printf("----> executing job %q <----\n", job.Name())
 
-	var networkContainerID, lastContainerID string
-	var lastContainer config.Container
-	// Create and start all containers-- except the last one-- that one we will
-	// only create, then we will set ourselves up to capture its output and exit
-	// code before we start it.
-	for i, container := range job.Containers() {
-		containerID, err := e.createContainer(
+	var networkContainerID string
+	// Create and start all sidecar containers
+	for i, sidecarContainer := range job.SidecarContainers() {
+		sidecarContainerID, err := e.createContainer(
 			ctx,
 			secrets,
 			jobExecutionName,
@@ -88,49 +88,64 @@ func (e *executor) executeJob(
 			job.SourceMountMode(),
 			sharedStorageVolumeName,
 			networkContainerID,
-			container,
+			sidecarContainer,
 		)
 		if err != nil {
 			return errors.Wrapf(
 				err,
-				"error creating container %q for job %q",
-				container.Name(),
+				"error creating sidecar container %q for job %q",
+				sidecarContainer.Name(),
 				job.Name(),
 			)
 		}
-		containerIDs[i] = containerID
+		containerIDs[i] = sidecarContainerID
 		if i == 0 {
-			networkContainerID = containerID
+			networkContainerID = sidecarContainerID
 		}
-		if i == len(containerIDs)-1 {
-			lastContainerID = containerID
-			lastContainer = container
-		} else {
-			// Start all but the last container
-			if err := e.dockerClient.ContainerStart(
-				ctx,
-				containerID,
-				dockerTypes.ContainerStartOptions{},
-			); err != nil {
-				return errors.Wrapf(
-					err,
-					"error starting container %q for job %q",
-					container.Name(),
-					job.Name(),
-				)
-			}
+		if err := e.dockerClient.ContainerStart(
+			ctx,
+			sidecarContainerID,
+			dockerTypes.ContainerStartOptions{},
+		); err != nil {
+			return errors.Wrapf(
+				err,
+				"error starting sidecar container %q for job %q",
+				sidecarContainer.Name(),
+				job.Name(),
+			)
 		}
 	}
-	// Establish channels to use for waiting for the last container to exit
-	containerWaitRespCh, containerWaitErrCh := e.dockerClient.ContainerWait(
+	// Create the primary container
+	primaryContainerID, err := e.createContainer(
 		ctx,
-		lastContainerID,
-		dockerContainer.WaitConditionNextExit,
+		secrets,
+		jobExecutionName,
+		jobSrcPath,
+		job.SourceMountMode(),
+		sharedStorageVolumeName,
+		networkContainerID,
+		primaryContainer,
 	)
-	// Attach to the last container to see its output
-	containerAttachResp, err := e.dockerClient.ContainerAttach(
+	if err != nil {
+		return errors.Wrapf(
+			err,
+			"error creating primary container %q for job %q",
+			primaryContainer.Name(),
+			job.Name(),
+		)
+	}
+	containerIDs[len(containerIDs)-1] = primaryContainerID
+	// Establish channels to use for waiting for the primary container to exit
+	primaryContainerWaitRespCh, primaryContainerWaitErrCh :=
+		e.dockerClient.ContainerWait(
+			ctx,
+			primaryContainerID,
+			dockerContainer.WaitConditionNextExit,
+		)
+	// Attach to the primary container to see its output
+	primaryContainerAttachResp, err := e.dockerClient.ContainerAttach(
 		ctx,
-		lastContainerID,
+		primaryContainerID,
 		dockerTypes.ContainerAttachOptions{
 			Stream: true,
 			Stdout: true,
@@ -140,73 +155,73 @@ func (e *executor) executeJob(
 	if err != nil {
 		return errors.Wrapf(
 			err,
-			"error attaching to container %q for job %q",
-			lastContainer.Name(),
+			"error attaching to primary container %q for job %q",
+			primaryContainer.Name(),
 			job.Name(),
 		)
 	}
-	// Concurrently deal with the output from the last container
+	// Concurrently deal with the output from the primary container
 	go func() {
-		defer containerAttachResp.Close()
+		defer primaryContainerAttachResp.Close()
 		var gerr error
 		stdOutWriter := prefixingWriter(
 			job.Name(),
-			lastContainer.Name(),
+			primaryContainer.Name(),
 			os.Stdout,
 		)
-		if lastContainer.TTY() {
-			_, gerr = io.Copy(stdOutWriter, containerAttachResp.Reader)
+		if primaryContainer.TTY() {
+			_, gerr = io.Copy(stdOutWriter, primaryContainerAttachResp.Reader)
 		} else {
 			stdErrWriter := prefixingWriter(
 				job.Name(),
-				lastContainer.Name(),
+				primaryContainer.Name(),
 				os.Stderr,
 			)
 			_, gerr = stdcopy.StdCopy(
 				stdOutWriter,
 				stdErrWriter,
-				containerAttachResp.Reader,
+				primaryContainerAttachResp.Reader,
 			)
 		}
 		if gerr != nil {
 			fmt.Printf(
-				"error processing output from container %q for job %q: %s\n",
-				lastContainer.Name(),
+				"error processing output from primary container %q for job %q: %s\n",
+				primaryContainer.Name(),
 				job.Name(),
 				err,
 			)
 		}
 	}()
-	// Finally, start the last container
+	// Finally, start the primary container
 	if err := e.dockerClient.ContainerStart(
 		ctx,
-		lastContainerID,
+		primaryContainerID,
 		dockerTypes.ContainerStartOptions{},
 	); err != nil {
 		return errors.Wrapf(
 			err,
-			"error starting container %q for job %q",
-			lastContainer.Name(),
+			"error starting primary container %q for job %q",
+			primaryContainer.Name(),
 			job.Name(),
 		)
 	}
 	select {
-	case containerWaitResp := <-containerWaitRespCh:
-		if containerWaitResp.StatusCode != 0 {
+	case primaryContainerWaitResp := <-primaryContainerWaitRespCh:
+		if primaryContainerWaitResp.StatusCode != 0 {
 			// The command executed inside the container exited non-zero
 			return &errJobExitedNonZero{
 				job:      job.Name(),
-				exitCode: containerWaitResp.StatusCode,
+				exitCode: primaryContainerWaitResp.StatusCode,
 			}
 		}
-	case err := <-containerWaitErrCh:
+	case err := <-primaryContainerWaitErrCh:
 		if err == ctx.Err() {
 			return &errInProgressJobAborted{job: job.Name()}
 		}
 		return errors.Wrapf(
 			err,
-			"error waiting for completion of container %q for job %q",
-			lastContainer.Name(),
+			"error waiting for completion of primary container %q for job %q",
+			primaryContainer.Name(),
 			job.Name(),
 		)
 	case <-ctx.Done():
