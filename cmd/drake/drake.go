@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/lovethedrake/devdrake/pkg/version"
+	"github.com/lovethedrake/drakecore/config"
 	"github.com/urfave/cli"
 )
 
@@ -18,6 +19,11 @@ func main() {
 	if version.Commit() != "" {
 		app.Version = fmt.Sprintf("%s+%s", app.Version, version.Commit())
 	}
+	app.Version = fmt.Sprintf(
+		"%s supports DrakeSpec %s",
+		app.Version,
+		config.SupportedSpecVersions,
+	)
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  flagsFile,
