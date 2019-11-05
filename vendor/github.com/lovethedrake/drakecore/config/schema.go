@@ -99,6 +99,53 @@ var jsonSchemaBytes = []byte(`
 				"sharedStorageMountPath": {
 					"type": "string",
 					"description": "Where within the container to mount shared storage"
+				},
+				"resources": { "$ref": "#/definitions/resources" }
+			}
+		},
+
+		"resources": {
+			"type": "object",
+			"description": "Resource constraints for a container",
+			"additionalProperties": false,
+			"properties": {
+				"cpu": { "$ref": "#/definitions/cpu" },
+				"memory": { "$ref": "#/definitions/memory" }
+			}
+		},
+
+		"cpu": {
+			"type": "object",
+			"description": "CPU constraints for a container",
+			"additionalProperties": false,
+			"properties": {
+				"requestedMillicores": {
+					"type": "integer",
+					"description": "The requested number of millicores for use by the container",
+					"minimum": 1
+				},
+				"maxMillicores": {
+					"type": "integer",
+					"description": "The maximum number of millicores that may be used by the container",
+					"minimum": 1
+				}
+			}
+		},
+
+		"memory": {
+			"type": "object",
+			"description": "Memory constraints for a container",
+			"additionalProperties": false,
+			"properties": {
+				"requestedMegabytes": {
+					"type": "integer",
+					"description": "The requested amount of memory in megabytes for use by the container",
+					"minimum": 4
+				},
+				"maxMegabytes": {
+					"type": "integer",
+					"description": "The maximum amount of memory in megabytes that may be used by the container",
+					"minimum": 4
 				}
 			}
 		},
@@ -175,7 +222,7 @@ var jsonSchemaBytes = []byte(`
 		"specVersion": {
 			"type": "string",
 			"description": "The revision of the specification with which this configuration complies",
-			"enum": [ "v0.2.0" ]
+			"enum": [ "v0.3.0" ]
 		},
 		"snippets": {
 			"type": "object"

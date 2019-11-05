@@ -29,20 +29,23 @@ type Container interface {
 	// SharedStorageMountPath returns a path to where shared storage should be
 	// mounted into the container
 	SharedStorageMountPath() string
+	// Returns the resource configuration (CPU and memory) for the container
+	Resources() Resources
 }
 
 type container struct {
-	ContainerName           string   `json:"name"`
-	Img                     string   `json:"image"`
-	Env                     []string `json:"environment"`
-	WorkDir                 string   `json:"workingDirectory"`
-	Cmd                     []string `json:"command"`
-	Arguments               []string `json:"args"`
-	IsTTY                   bool     `json:"tty"`
-	IsPrivileged            bool     `json:"privileged"`
-	ShouldMountDockerSocket bool     `json:"mountDockerSocket"`
-	SrcMountPath            string   `json:"sourceMountPath"`
-	SharedStrgMountPath     string   `json:"sharedStorageMountPath"`
+	ContainerName           string     `json:"name"`
+	Img                     string     `json:"image"`
+	Env                     []string   `json:"environment"`
+	WorkDir                 string     `json:"workingDirectory"`
+	Cmd                     []string   `json:"command"`
+	Arguments               []string   `json:"args"`
+	IsTTY                   bool       `json:"tty"`
+	IsPrivileged            bool       `json:"privileged"`
+	ShouldMountDockerSocket bool       `json:"mountDockerSocket"`
+	SrcMountPath            string     `json:"sourceMountPath"`
+	SharedStrgMountPath     string     `json:"sharedStorageMountPath"`
+	Resourcez               *resources `json:"resources"`
 }
 
 func (c *container) Name() string {
@@ -102,4 +105,11 @@ func (c *container) SourceMountPath() string {
 
 func (c *container) SharedStorageMountPath() string {
 	return c.SharedStrgMountPath
+}
+
+func (c *container) Resources() Resources {
+	if c.Resourcez == nil {
+		return &resources{}
+	}
+	return c.Resourcez
 }
