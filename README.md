@@ -87,25 +87,20 @@ additional arguments:
 $ drake run <job-name-0> <job-name-1> ... <job-name-n>
 ```
 
-Note, the command above creates an _ad hoc_ pipeline with no dependencies
-between its jobs. By default, they execute one at a time, _but in no specific
-order_. (This may change in the future.) It is recommended that if you need to
-frequently execute several jobs in a particular sequence, you explicitly create
-a named pipeline for that worflow in your `Drakefile.yaml`.
+Note, the command above creates an _ad hoc_ pipeline wherein execution of each
+job is contingent upon successful execution of the previous job. (Concurrent
+execution of jobs in a pipeline is discussed later in this section, but these
+dependencies effectively preclude any concurrent job execution in such an _ad
+hoc_ pipeline.) If you need to execute more complex pipelines or take advantage
+of any concurrent job execution, it is recommended to explicitly create a named
+pipeline for that worflow in your `Drakefile.yaml`.
 
-It is possible to execute multiple jobs concurrently by using either the
-`--concurrency` or `-c` flag with a value greater than `1`.
+Note: Because pipelines may contain multiple jobs and because jobs can involve
+multiple, cooperating containers, `drake` prefixes every line of output with the
+job name and container name to disambiguate its source.
 
-```console
-$ drake run <job-name-0> <job-name-1> ... <job-name-n> --concurrency 2
-```
-
-Note: Because multiple jobs can execute concurrently and because jobs can
-involve multiple, cooperating containers, `drake` prefixes every line of output
-with the job name and container name to disambiguate its source.
-
-To execute a pipeline instead of a job, use either the `--pipeline` or `-p`
-flag:
+To execute a named pipeline instead of a series of jobs, use either the
+`--pipeline` or `-p` flag:
 
 ```console
 $ drake run <pipeline-name> --pipeline
@@ -113,11 +108,11 @@ $ drake run <pipeline-name> --pipeline
 
 Note: Multiple pipelines _cannot_ be executed at once.
 
-Pipelines are composed of jobs that (dependencies between jobs notwithstanding)
-MAY execute concurrently. However, by default, `drake` never executes jobs in a
-pipeline concurrently. To enable concurrent execution of the jobs within a
-pipeline, once again, utilize either the `--concurrency` or `-c` flag with a
-value greater than `1`.
+Pipelines are composed of jobs that MAY execute concurrently (wherever each
+job's dependencies permit). However, by default, `drake` never executes jobs in
+a pipeline concurrently. To enable concurrent execution of the jobs within a
+pipeline, use either the `--concurrency` or `-c` flag with a value greater than
+`1`.
 
 ```console
 $ drake run <pipeline-name> --pipeline --concurrency 2
