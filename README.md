@@ -154,9 +154,9 @@ sub-command will, by default, load secrets from the `Drakesecrets` file and
 expose them as environment variables within every container of every job that it
 executes.
 
-If your `Drakesecrets` file does not exist at the root of your project,
-`drake run` supports optional `--file` and `-f` flags-- either of which can be
-used to point `drake` to the location of your `Drakesecrets`.
+If your `Drakesecrets` file does not exist at the root of your project, `drake
+run` supports optional `--secrets` and `-s` flags-- either of which can be used
+to point `drake` to the location of your `Drakesecrets`.
 
 __Unless it is kept outside your project source tree, do not forget to add
 `Drakesecrets` to your `.gitignore` file to avoid checking sensitive information
