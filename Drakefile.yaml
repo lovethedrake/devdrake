@@ -1,5 +1,5 @@
 specUri: github.com/lovethedrake/drakespec
-specVersion: v0.2.0
+specVersion: v0.3.0
 
 snippets:
 
@@ -9,6 +9,11 @@ snippets:
     sourceMountPath: /go/src/github.com/lovethedrake/devdrake
     workingDirectory: /go/src/github.com/lovethedrake/devdrake
     tty: true
+    resources:
+      cpu:
+        maxMillicores: 2000
+      memory:
+        maxMegabytes: 2048
 
   baseDemoContainer: &baseDemoContainer
     name: demo
@@ -62,7 +67,7 @@ jobs:
       command: ["dep", "ensure"]
       args: ["-v"]
     sourceMountMode: RW
-
+    
 ################################################################################
 # Test jobs                                                                    #
 ################################################################################
