@@ -263,7 +263,45 @@ func (e *executor) createContainer(
 	if len(args) > 0 {
 		containerConfig.Cmd = args
 	}
+
+	// Work out resource limits... involves some math
+	const (
+		minCPUShares     = 2
+		sharesPerCPU     = 1024
+		millicoresPerCPU = 1000
+		quotaPeriod      = 100000
+		minQuotaPeriod   = 1000
+		minMegabytes     = 4
+		bytesPerMegabyte = 1000000
+	)
+	requestedMillicores :=
+		int64(container.Resources().CPU().RequestedMillicores())
+	// Conceptually requestedMillicores / millicoresPerCPU) * sharesPerCPU, but
+	// factored to improve rounding.
+	cpuShares := requestedMillicores * sharesPerCPU / millicoresPerCPU
+	if cpuShares <= minCPUShares {
+		cpuShares = minCPUShares
+	}
+	maxMillicores := int64(container.Resources().CPU().MaxMillicores())
+	// Conceptually maxMillicores / millicoresPerCPU) * quotaPeriod, but factored
+	// to improve rounding.
+	cpuQuota := maxMillicores * quotaPeriod / millicoresPerCPU
+	if cpuQuota < minQuotaPeriod {
+		cpuQuota = minQuotaPeriod
+	}
+	maxMegabytes := int64(container.Resources().Memory().MaxMegabytes())
+	if maxMegabytes < minMegabytes {
+		maxMegabytes = minMegabytes
+	}
+	memoryBytes := maxMegabytes * bytesPerMegabyte
 	hostConfig := &dockerContainer.HostConfig{
+		// nolint: lll
+		Resources: dockerContainer.Resources{
+			CPUShares: cpuShares,
+			CPUPeriod: quotaPeriod,
+			CPUQuota:  cpuQuota,
+			Memory:    memoryBytes,
+		},
 		Privileged: container.Privileged(),
 	}
 	if networkContainerID != "" {
