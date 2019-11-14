@@ -38,6 +38,9 @@ func (e *executor) ExecutePipeline(
 		}
 	}
 	// Pull all the images before executing anything.
+	// TODO: We need to make this conditionally pull images only if:
+	// 1. They're not present
+	// 2. The image pull policy is "Always"
 	if err := e.pullImages(ctx, imageNames); err != nil {
 		return err
 	}
