@@ -13,7 +13,7 @@ import (
 
 // TODO: krancour: This is currently checked by the JSON schema, but in the
 // future, this won't be the case.
-// const supportedVersionStr = "v0.3.0"
+// const supportedVersionStr = "v0.4.0"
 
 // Config is a public interface for the root of the Drake configuration tree.
 type Config interface {

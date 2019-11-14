@@ -55,6 +55,11 @@ var jsonSchemaBytes = []byte(`
 					"type": "string",
 					"description": "URL for the OCI image on which to base the container"
 				},
+				"imagePullPolicy": {
+					"type": "string",
+					"description": "Pull policy for the OCI image on which to base the container",
+					"enum": [ "IfNotPresent", "Always" ]
+				},
 				"environment": {
 					"type": "array",
 					"description": "A list of key=value pairs to be exposed as environment variables within the container",
@@ -222,7 +227,7 @@ var jsonSchemaBytes = []byte(`
 		"specVersion": {
 			"type": "string",
 			"description": "The revision of the specification with which this configuration complies",
-			"enum": [ "v0.3.0" ]
+			"enum": [ "v0.4.0" ]
 		},
 		"snippets": {
 			"type": "object"

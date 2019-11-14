@@ -116,12 +116,12 @@
   version = "v1.0.2"
 
 [[projects]]
-  digest = "1:f3bcec8688376bd4048cf5865c5c07073349243ab4d632709f47394dd55cc863"
+  digest = "1:ff7347f567fd1c6c554b8338acf57cb6aa5d6e85bc7758d0fede91f8465cf575"
   name = "github.com/lovethedrake/drakecore"
   packages = ["config"]
   pruneopts = "UT"
-  revision = "ca047e49c9501566a46f44c5a2fb6b0586cc64a6"
-  version = "v0.11.0"
+  revision = "9d395a9fcd26d04669cafedaa60ad023c3831c2f"
+  version = "v0.12.0"
 
 [[projects]]
   digest = "1:5d231480e1c64a726869bc4142d270184c419749d34f167646baa21008eb0a79"
