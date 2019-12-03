@@ -43,7 +43,7 @@
   version = "v2.7.1"
 
 [[projects]]
-  digest = "1:4e270295f272191a9753419fad67531136386311082bccef1d871828a101bf7d"
+  digest = "1:c492c39223ce8000646e92e022a8d2ce0184c6095016773c497056baf9580a7d"
   name = "github.com/docker/docker"
   packages = [
     "api",
@@ -64,7 +64,9 @@
     "api/types/volume",
     "client",
     "pkg/jsonmessage",
+    "pkg/parsers",
     "pkg/stdcopy",
+    "pkg/sysinfo",
     "pkg/term",
     "pkg/term/windows",
   ]
@@ -116,12 +118,12 @@
   version = "v1.0.2"
 
 [[projects]]
-  digest = "1:ff7347f567fd1c6c554b8338acf57cb6aa5d6e85bc7758d0fede91f8465cf575"
+  digest = "1:018c6376a88a67442a7b8381c9fba208f1ef8cf41046aefe092cb9eaab4846fb"
   name = "github.com/lovethedrake/drakecore"
   packages = ["config"]
   pruneopts = "UT"
-  revision = "9d395a9fcd26d04669cafedaa60ad023c3831c2f"
-  version = "v0.12.0"
+  revision = "d93dbbbc367014532e255546269a9ac00dc0d21e"
+  version = "v0.13.0"
 
 [[projects]]
   digest = "1:5d231480e1c64a726869bc4142d270184c419749d34f167646baa21008eb0a79"
@@ -149,6 +151,17 @@
   pruneopts = "UT"
   revision = "d60099175f88c47cd379c4738d158884749ed235"
   version = "v1.0.1"
+
+[[projects]]
+  digest = "1:a8d5e9c3181278b45f531a25b9594ecbeab5fa8eb69b4d974db88e071d457c75"
+  name = "github.com/opencontainers/runc"
+  packages = [
+    "libcontainer/cgroups",
+    "libcontainer/configs",
+  ]
+  pruneopts = "UT"
+  revision = "1a124e9c2da68c867ed2c4f4ff19f0cd95cda0cd"
+  version = "v0.0.8"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -248,6 +261,7 @@
     "github.com/docker/docker/client",
     "github.com/docker/docker/pkg/jsonmessage",
     "github.com/docker/docker/pkg/stdcopy",
+    "github.com/docker/docker/pkg/sysinfo",
     "github.com/lovethedrake/drakecore/config",
     "github.com/mitchellh/go-homedir",
     "github.com/pkg/errors",
