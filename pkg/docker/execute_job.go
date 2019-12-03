@@ -10,10 +10,15 @@ import (
 	dockerTypes "github.com/docker/docker/api/types"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/docker/docker/pkg/sysinfo"
 	"github.com/lovethedrake/devdrake/pkg/file"
 	"github.com/lovethedrake/drakecore/config"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+)
+
+const (
+	millicoresPerCPU = 1000
 )
 
 func (e *executor) executeJob(
@@ -88,6 +93,7 @@ func (e *executor) executeJob(
 			job.SourceMountMode(),
 			sharedStorageVolumeName,
 			networkContainerID,
+			job.OSFamily(),
 			sidecarContainer,
 		)
 		if err != nil {
@@ -124,6 +130,7 @@ func (e *executor) executeJob(
 		job.SourceMountMode(),
 		sharedStorageVolumeName,
 		networkContainerID,
+		job.OSFamily(),
 		primaryContainer,
 	)
 	if err != nil {
@@ -242,6 +249,7 @@ func (e *executor) createContainer(
 	sourceMountMode config.SourceMountMode,
 	sharedStorageVolumeName string,
 	networkContainerID string,
+	osFamily config.OSFamily,
 	container config.Container,
 ) (string, error) {
 	env := make([]string, len(secrets))
@@ -266,43 +274,40 @@ func (e *executor) createContainer(
 
 	// Work out resource limits... involves some math
 	const (
-		minCPUShares     = 2
-		sharesPerCPU     = 1024
-		millicoresPerCPU = 1000
-		quotaPeriod      = 100000
-		minQuotaPeriod   = 1000
 		minMegabytes     = 4
 		bytesPerMegabyte = 1000000
 	)
-	requestedMillicores :=
-		int64(container.Resources().CPU().RequestedMillicores())
-	// Conceptually requestedMillicores / millicoresPerCPU) * sharesPerCPU, but
-	// factored to improve rounding.
-	cpuShares := requestedMillicores * sharesPerCPU / millicoresPerCPU
-	if cpuShares <= minCPUShares {
-		cpuShares = minCPUShares
-	}
-	maxMillicores := int64(container.Resources().CPU().MaxMillicores())
-	// Conceptually maxMillicores / millicoresPerCPU) * quotaPeriod, but factored
-	// to improve rounding.
-	cpuQuota := maxMillicores * quotaPeriod / millicoresPerCPU
-	if cpuQuota < minQuotaPeriod {
-		cpuQuota = minQuotaPeriod
-	}
 	maxMegabytes := int64(container.Resources().Memory().MaxMegabytes())
 	if maxMegabytes < minMegabytes {
 		maxMegabytes = minMegabytes
 	}
 	memoryBytes := maxMegabytes * bytesPerMegabyte
 	hostConfig := &dockerContainer.HostConfig{
-		// nolint: lll
 		Resources: dockerContainer.Resources{
-			CPUShares: cpuShares,
-			CPUPeriod: quotaPeriod,
-			CPUQuota:  cpuQuota,
-			Memory:    memoryBytes,
+			Memory: memoryBytes,
 		},
 		Privileged: container.Privileged(),
+	}
+	requestedMillicores :=
+		int64(container.Resources().CPU().RequestedMillicores())
+	maxMillicores := int64(container.Resources().CPU().MaxMillicores())
+	if osFamily == config.OSFamilyLinux {
+		hostConfig.Resources.CPUShares =
+			millicoresToSharesLinux(requestedMillicores)
+		const quotaPeriod = 100000 // 100000 is equivalent to 100ms
+		hostConfig.Resources.CPUPeriod = quotaPeriod
+		hostConfig.Resources.CPUQuota =
+			millicoresToCPUQuotaLinux(maxMillicores, quotaPeriod)
+	} else if osFamily == config.OSFamilyWindows {
+		hyperv := true // TODO: Don't assume hyperv
+		hostConfig.Resources.CPUShares = millicoresToSharesWindows(
+			requestedMillicores,
+			hyperv,
+		)
+		hostConfig.Resources.CPUCount =
+			millicoresToCPUCountWindows(maxMillicores, hyperv)
+		hostConfig.Resources.CPUPercent =
+			millicoresToCPUPercentWindows(maxMillicores, hyperv)
 	}
 	if networkContainerID != "" {
 		hostConfig.NetworkMode = dockerContainer.NetworkMode(
@@ -371,4 +376,105 @@ func (e *executor) forceRemoveContainers(
 			fmt.Printf(`error removing container "%s": %s`, containerID, err)
 		}
 	}
+}
+
+func millicoresToSharesLinux(millicores int64) int64 {
+	const (
+		minShares    = 2
+		sharesPerCPU = 1024
+	)
+	if millicores == 0 {
+		// Return minimum share supported by the kernel
+		return minShares
+	}
+	// Conceptually millicores / millicoresPerCPU) * sharesPerCPU, but factored to
+	// improve rounding.
+	shares := millicores * sharesPerCPU / millicoresPerCPU
+	if shares <= minShares {
+		return minShares
+	}
+	return shares
+}
+
+func millicoresToSharesWindows(millicores int64, hyperv bool) int64 {
+	const (
+		// nolint: lll
+		// https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/resource-controls
+		minSharesProcess = 5000
+		minSharesHyperV  = 10
+		maxShares        = 10000
+	)
+	var minShares int64 = minSharesProcess
+	if hyperv {
+		minShares = minSharesHyperV
+	}
+	if millicores == 0 {
+		// Return minimum share supported by the kernel
+		return minShares
+	}
+	// Conceptually (millicores / millicoresPerCPU) * sharesPerCPU, but factored
+	// to improve rounding.
+	totalCPU := sysinfo.NumCPU()
+	shares :=
+		(millicores * (maxShares - minShares)) / int64(totalCPU) / millicoresPerCPU
+	if shares < minShares {
+		return minShares
+	}
+	return shares
+}
+
+func millicoresToCPUQuotaLinux(millicores int64, quotaPeriod int64) int64 {
+	if millicores == 0 {
+		return 0
+	}
+	const (
+		// 100000 is equivalent to 100ms
+		minQuotaPeriod = 1000
+	)
+	// Conceptually (millicores / millicoresPerCPU) * quotaPeriod, but factored
+	// to improve rounding.
+	cpuQuota := millicores * quotaPeriod / millicoresPerCPU
+	if cpuQuota < minQuotaPeriod {
+		return minQuotaPeriod
+	}
+	return cpuQuota
+}
+
+func millicoresToCPUCountWindows(millicores int64, hyperv bool) int64 {
+	if !hyperv {
+		return 0
+	}
+	return (millicores + 999) / 1000
+}
+
+func millicoresToCPUPercentWindows(millicores int64, hyperv bool) int64 {
+	// Much of this algorithm was largely cribbed from Kubernetes, but it seems to
+	// find a "cpuMaximum" that is a factor of 100 larger than what we expect the
+	// cpuPercent to be. The algorithm is adjusted accordingly, with the original
+	// lines commented in case we ever figure out exactly what was going on here.
+	// In the meantime, this *appears* to produce correct values that work fine
+	// with Docker. (Those that are off by a factor of 100 simply do NOT work.)
+	// cpuMaximum := 10000 * millicores / int64(sysinfo.NumCPU()) / 1000
+	cpuPercent := 10000 * millicores / int64(sysinfo.NumCPU()) / 1000 / 100
+	if hyperv {
+		cpuCount := millicoresToCPUCountWindows(millicores, hyperv)
+		if cpuCount != 0 {
+			// cpuMaximum = millicores / cpuCount * 10000 / 1000
+			cpuPercent = millicores / cpuCount * 10000 / 1000 / 100
+		}
+	}
+	// // ensure cpuMaximum is in range [1, 10000].
+	// if cpuMaximum < 1 {
+	// 	cpuMaximum = 1
+	// } else if cpuMaximum > 10000 {
+	// 	cpuMaximum = 10000
+	// }
+	// ensure cpuPercent is in range [1, 100].
+	if cpuPercent < 1 {
+		cpuPercent = 1
+	} else if cpuPercent > 100 {
+		cpuPercent = 100
+	}
+	// return cpuMaximum
+	return cpuPercent
 }
