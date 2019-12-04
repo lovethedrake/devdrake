@@ -14,6 +14,16 @@ const (
 	SourceMountModeReadWrite SourceMountMode = "RW"
 )
 
+// OSFamily represents the supported kernels-- linux and windows
+type OSFamily string
+
+const (
+	// OSFamilyLinux represents the linux family of operating systems
+	OSFamilyLinux OSFamily = "linux"
+	// OSFamilyWindows represents the windows family of operating systems
+	OSFamilyWindows OSFamily = "windows"
+)
+
 // Job is a public interface for job configuration.
 type Job interface {
 	// Name returns the job's name
@@ -24,6 +34,8 @@ type Job interface {
 	SidecarContainers() []Container
 	// SourceMountMode returns the job's SourceMountMode
 	SourceMountMode() SourceMountMode
+	// OSFamily returns the job's OSFamily
+	OSFamily() OSFamily
 }
 
 type job struct {
@@ -31,6 +43,7 @@ type job struct {
 	primaryContainer  Container
 	sidecarContainers []Container
 	sourceMountMode   SourceMountMode
+	osFamily          OSFamily
 }
 
 func (j *job) Name() string {
@@ -52,4 +65,8 @@ func (j *job) SidecarContainers() []Container {
 
 func (j *job) SourceMountMode() SourceMountMode {
 	return j.sourceMountMode
+}
+
+func (j *job) OSFamily() OSFamily {
+	return j.osFamily
 }

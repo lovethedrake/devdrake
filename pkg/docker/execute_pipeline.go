@@ -71,7 +71,7 @@ jobsLoop:
 			fmt.Sprintf("%s-shared-storage", pipelineExecutionName)
 		if _, err := e.dockerClient.VolumeCreate(
 			ctx,
-			volumetypes.VolumesCreateBody{
+			volumetypes.VolumeCreateBody{
 				Name: sharedStorageVolumeName,
 			},
 		); err != nil {
