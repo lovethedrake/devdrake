@@ -22,11 +22,15 @@
 
 [[constraint]]
   name = "github.com/docker/docker"
-  revision = "13771fede318028d67e5d521bb97bcb54a4aaec5"
+  revision = "de6df469f1be294fe2dcf8d102725569bca1f056"
 
 [[constraint]]
   name = "github.com/lovethedrake/drakecore"
   version = "v0.13.0"
+
+[[override]]
+  name = "github.com/opencontainers/runc"
+  version = "v1.0.0-rc9"
 
 [prune]
   go-tests = true
