@@ -42,6 +42,10 @@ var jsonSchemaBytes = []byte(`
 					"type": "string",
 					"description": "The OS family (linux or windows) of ALL of the job's containers",
 					"enum": [ "linux", "windows" ]
+				},
+				"cpuArch": {
+					"type": "string",
+					"description": "The CPU architecture of ALL of the job's containers"
 				}
 			}
 		},
@@ -232,7 +236,7 @@ var jsonSchemaBytes = []byte(`
 		"specVersion": {
 			"type": "string",
 			"description": "The revision of the specification with which this configuration complies",
-			"enum": [ "v0.5.0" ]
+			"enum": [ "v0.6.0" ]
 		},
 		"snippets": {
 			"type": "object"

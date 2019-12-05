@@ -24,6 +24,20 @@ const (
 	OSFamilyWindows OSFamily = "windows"
 )
 
+// CPUArch represents CPU architecture
+type CPUArch string
+
+const (
+	// CPUArchAMD64 represents amd64 CPU architecture
+	CPUArchAMD64 CPUArch = "amd64"
+
+	// Note that there are a lot of different CPU architectures supported by
+	// OCI container runtimes and it was a conscious choice to only enumerate the
+	// default here and not attempt to enumerate all of them. Users of DrakeCore
+	// should use string literals cast as CPUArch to reference alternative
+	// architectures.
+)
+
 // Job is a public interface for job configuration.
 type Job interface {
 	// Name returns the job's name
@@ -36,6 +50,8 @@ type Job interface {
 	SourceMountMode() SourceMountMode
 	// OSFamily returns the job's OSFamily
 	OSFamily() OSFamily
+	// CPUArch returns the job's CPU architecture
+	CPUArch() CPUArch
 }
 
 type job struct {
@@ -44,6 +60,7 @@ type job struct {
 	sidecarContainers []Container
 	sourceMountMode   SourceMountMode
 	osFamily          OSFamily
+	cpuArch           CPUArch
 }
 
 func (j *job) Name() string {
@@ -69,4 +86,8 @@ func (j *job) SourceMountMode() SourceMountMode {
 
 func (j *job) OSFamily() OSFamily {
 	return j.osFamily
+}
+
+func (j *job) CPUArch() CPUArch {
+	return j.cpuArch
 }

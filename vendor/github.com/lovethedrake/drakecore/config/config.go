@@ -13,7 +13,7 @@ import (
 
 // TODO: krancour: This is currently checked by the JSON schema, but in the
 // future, this won't be the case.
-// const supportedVersionStr = "v0.5.0"
+// const supportedVersionStr = "v0.6.0"
 
 // Config is a public interface for the root of the Drake configuration tree.
 type Config interface {
@@ -88,6 +88,7 @@ func (c *config) UnmarshalJSON(data []byte) error {
 		SidecarContainers []*container    `json:"sidecarContainers"`
 		SourceMountMode   SourceMountMode `json:"sourceMountMode"`
 		OSFamily          OSFamily        `json:"osFamily"`
+		CPUArch           CPUArch         `json:"cpuArch"`
 	}
 	type flatPipelineJob struct {
 		Name         string   `json:"name"`
@@ -145,12 +146,16 @@ func (c *config) UnmarshalJSON(data []byte) error {
 			sidecarContainers: make([]Container, len(flatJob.SidecarContainers)),
 			sourceMountMode:   flatJob.SourceMountMode,
 			osFamily:          flatJob.OSFamily,
+			cpuArch:           flatJob.CPUArch,
 		}
 		if job.sourceMountMode == "" {
 			job.sourceMountMode = SourceMountModeReadOnly
 		}
 		if job.osFamily == "" {
 			job.osFamily = OSFamilyLinux
+		}
+		if job.cpuArch == "" {
+			job.cpuArch = CPUArchAMD64
 		}
 		for j, sidecarContainer := range flatJob.SidecarContainers {
 			job.sidecarContainers[j] = sidecarContainer
