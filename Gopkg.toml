@@ -26,7 +26,7 @@
 
 [[constraint]]
   name = "github.com/lovethedrake/drakecore"
-  version = "v0.13.0"
+  version = "v0.14.0"
 
 [[override]]
   name = "github.com/opencontainers/runc"
