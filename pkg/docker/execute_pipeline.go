@@ -32,9 +32,25 @@ func (e *executor) ExecutePipeline(
 	// Build a set of all the image names required for this pipeline.
 	imageNames := map[string]struct{}{}
 	for _, job := range pipeline.Jobs() {
-		imageNames[job.Job().PrimaryContainer().Image()] = struct{}{}
+		if shouldPull, err := e.shouldPull(
+			ctx,
+			job.Job().PrimaryContainer().Image(),
+			job.Job().PrimaryContainer().ImagePullPolicy(),
+		); err != nil {
+			return err
+		} else if shouldPull {
+			imageNames[job.Job().PrimaryContainer().Image()] = struct{}{}
+		}
 		for _, container := range job.Job().SidecarContainers() {
-			imageNames[container.Image()] = struct{}{}
+			if shouldPull, err := e.shouldPull(
+				ctx,
+				container.Image(),
+				container.ImagePullPolicy(),
+			); err != nil {
+				return err
+			} else if shouldPull {
+				imageNames[container.Image()] = struct{}{}
+			}
 		}
 	}
 	// Pull all the images before executing anything.
