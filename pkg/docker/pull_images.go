@@ -7,8 +7,25 @@ import (
 	"io"
 
 	dockerTypes "github.com/docker/docker/api/types"
+	docker "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/lovethedrake/drakecore/config"
 )
+
+func (e *executor) shouldPull(
+	ctx context.Context,
+	imageName string,
+	imagePullPolicy config.ImagePullPolicy,
+) (bool, error) {
+	if _, _, err :=
+		e.dockerClient.ImageInspectWithRaw(ctx, imageName); err != nil {
+		if docker.IsErrNotFound(err) {
+			return true, nil
+		}
+		return false, err
+	}
+	return imagePullPolicy == config.ImagePullPolicyAlways, nil
+}
 
 func (e *executor) pullImages(
 	ctx context.Context,
