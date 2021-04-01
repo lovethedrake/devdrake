@@ -61,13 +61,12 @@ jobs:
 # Utility jobs                                                                 #
 ################################################################################
 
-  dep:
+  vendor:
     primaryContainer:
       <<: *baseGoContainer
-      command: ["dep", "ensure"]
-      args: ["-v"]
+      command: ["go", "run", "mage.go", "vendor"]
     sourceMountMode: RW
-    
+
 ################################################################################
 # Test jobs                                                                    #
 ################################################################################
@@ -75,7 +74,7 @@ jobs:
   verify-vendored-code:
     primaryContainer:
       <<: *baseGoContainer
-      command: ["dep", "check"]
+      command: ["go", "run", "mage.go", "verifyVendor"]
 
   test-unit:
     primaryContainer:
