@@ -166,12 +166,10 @@ For example, if you've upgraded the spec version of the Drakefile, then an older
 To do so, run the below command. This is approximately the same command that Drake will run behind the scenes if you were to use the Drakefile to build.
 
 ```console
-docker run --rm -v $PWD:/go/src/github.com/lovethedrake/devdrake -w /go/src/github.com/lovethedrake/devdrake -v $PWD/bin:/shared/bin/drake quay.io/deis/lightweight-docker-go:v0.7.0 scripts/build.sh $GOOS $GOARCH
+go run mage.go build
 ```
 
->Substitute `$GOOS` and `$GOARCH` for your appropriate platform. For example, if you're using MacOS, set `GOOS` to `darwin` and `GOARCH` to `amd64`.
-
-After the command exits, your built binary will be inside of `./bin`.
+After the command exits, your built binary will be inside of `./bin`, e.g. `./bin/drake-darwin-amd64`.
 
 ## Contributing
 
