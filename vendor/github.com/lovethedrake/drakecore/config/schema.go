@@ -37,6 +37,15 @@ var jsonSchemaBytes = []byte(`
 					"type": "string",
 					"description": "The mode to use if/when mounting source code into any of the job's containers",
 					"enum": [ "RO", "COPY", "RW" ]
+				},
+				"osFamily": {
+					"type": "string",
+					"description": "The OS family (linux or windows) of ALL of the job's containers",
+					"enum": [ "linux", "windows" ]
+				},
+				"cpuArch": {
+					"type": "string",
+					"description": "The CPU architecture of ALL of the job's containers"
 				}
 			}
 		},
@@ -54,6 +63,11 @@ var jsonSchemaBytes = []byte(`
 				"image": {
 					"type": "string",
 					"description": "URL for the OCI image on which to base the container"
+				},
+				"imagePullPolicy": {
+					"type": "string",
+					"description": "Pull policy for the OCI image on which to base the container",
+					"enum": [ "IfNotPresent", "Always" ]
 				},
 				"environment": {
 					"type": "array",
@@ -222,7 +236,7 @@ var jsonSchemaBytes = []byte(`
 		"specVersion": {
 			"type": "string",
 			"description": "The revision of the specification with which this configuration complies",
-			"enum": [ "v0.3.0" ]
+			"enum": [ "v0.6.0" ]
 		},
 		"snippets": {
 			"type": "object"
