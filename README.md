@@ -157,6 +157,20 @@ __Unless it is kept outside your project source tree, do not forget to add
 `Drakesecrets` to your `.gitignore` file to avoid checking sensitive information
 into source control.__
 
+## Development
+
+Normally, you should download the Drake CLI from the [releases page](https://github.com/lovethedrake/devdrake/releases). If one of the Drake versions from that page doesn't work, then you can use Drake to build itself. In rare cases, you might find that you can't do that, however.
+
+For example, if you've upgraded the spec version of the Drakefile, then an older Drake release won't be able to build the new Drakefile, so you'll need to manually build Drake from source.
+
+To do so, run the below command. This is approximately the same command that Drake will run behind the scenes if you were to use the Drakefile to build.
+
+```console
+go run mage.go build
+```
+
+After the command exits, your built binary will be inside of `./bin`, e.g. `./bin/drake-darwin-amd64`.
+
 ## Contributing
 
 This project accepts contributions via GitHub pull requests. The
