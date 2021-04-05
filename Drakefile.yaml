@@ -5,7 +5,7 @@ snippets:
 
   baseGoContainer: &baseGoContainer
     name: go
-    image: quay.io/deis/lightweight-docker-go:v0.7.0
+    image: brigadecore/go-tools:v0.1.0
     sourceMountPath: /devdrake
     workingDirectory: /devdrake
     tty: true
