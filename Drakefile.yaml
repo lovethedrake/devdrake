@@ -6,8 +6,8 @@ snippets:
   baseGoContainer: &baseGoContainer
     name: go
     image: quay.io/deis/lightweight-docker-go:v0.7.0
-    sourceMountPath: /go/src/github.com/lovethedrake/devdrake
-    workingDirectory: /go/src/github.com/lovethedrake/devdrake
+    sourceMountPath: /devdrake
+    workingDirectory: /devdrake
     tty: true
     resources:
       cpu:
