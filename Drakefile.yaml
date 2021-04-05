@@ -75,6 +75,7 @@ jobs:
     primaryContainer:
       <<: *baseGoContainer
       command: ["go", "run", "mage.go", "verifyVendor"]
+    sourceMountMode: COPY
 
   test-unit:
     primaryContainer:
