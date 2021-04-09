@@ -254,10 +254,11 @@ func (e *executor) createContainer(
 ) (string, error) {
 	env := make([]string, len(secrets))
 	copy(env, secrets)
+	env = append(env, config.EnvironmentMapToSlice(container.Environment())...)
 
 	containerConfig := &dockerContainer.Config{
 		Image:        container.Image(),
-		Env:          append(env, container.Environment()...),
+		Env:          env,
 		WorkingDir:   container.WorkingDirectory(),
 		Tty:          container.TTY(),
 		AttachStdout: true,

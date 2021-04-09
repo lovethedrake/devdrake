@@ -80,16 +80,9 @@ jobs:
   test-unit:
     primaryContainer:
       <<: *baseGoContainer
-      command: ["go", "test"]
-      args:
-      - -timeout
-      - 30s
-      - -race
-      - -coverprofile=/shared/coverage.txt
-      - -covermode=atomic
-      - ./cmd/...
-      - ./pkg/...
+      command: ["go", "run", "mage.go", "test"]
       sharedStorageMountPath: /shared
+    sourceMountMode: COPY
 
   upload-coverage-report:
     primaryContainer:
@@ -114,7 +107,7 @@ jobs:
     primaryContainer:
       <<: *baseGoContainer
       environment:
-      - CGO_ENABLED=0
+        CGO_ENABLED: "0"
       command: ["scripts/build.sh"]
       args: ["linux", "amd64"]
       sharedStorageMountPath: /shared
@@ -123,7 +116,7 @@ jobs:
     primaryContainer:
       <<: *baseGoContainer
       environment:
-      - CGO_ENABLED=0
+        CGO_ENABLED: "0"
       command: ["scripts/build.sh"]
       args: ["darwin", "amd64"]
       sharedStorageMountPath: /shared
@@ -132,7 +125,7 @@ jobs:
     primaryContainer:
       <<: *baseGoContainer
       environment:
-      - CGO_ENABLED=0
+        CGO_ENABLED: "0"
       command: ["scripts/build.sh"]
       args: ["windows", "amd64"]
       sharedStorageMountPath: /shared

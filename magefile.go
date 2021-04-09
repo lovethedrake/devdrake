@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/carolynvs/magex/shx"
@@ -30,12 +31,32 @@ func VerifyVendor() error {
 	return nil
 }
 
-// Compile the drake CLI locally, without using drake
+// Compile the drake CLI with Docker
 func Build() {
 	pwd, _ := os.Getwd()
 	must.RunV("docker", "run", "--rm",
 		"-v", pwd+":/go/src/github.com/lovethedrake/devdrake",
 		"-w", "/go/src/github.com/lovethedrake/devdrake",
 		"-v", pwd+"/bin:/shared/bin/drake",
-		"quay.io/deis/lightweight-docker-go:v0.7.0", "scripts/build.sh", runtime.GOOS, runtime.GOARCH)
+		"brigadecore/go-tools:v0.1.0", "scripts/build.sh", runtime.GOOS, runtime.GOARCH)
+}
+
+// Run unit tests
+func Test() {
+	coverageFile := filepath.Join(getOutputDir(), "coverage.txt")
+	must.RunV("go", "test", "-timeout=30s", "-race", "-coverprofile", coverageFile, "-covermode=atomic", "./cmd/...", "./pkg/...")
+}
+
+var outDir = ""
+
+func getOutputDir() string {
+	if outDir != "" {
+		return outDir
+	}
+	const sharedVolume = "/shared"
+	if _, err := os.Stat(sharedVolume); err == nil {
+		return sharedVolume
+	}
+
+	return "."
 }
