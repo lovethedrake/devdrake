@@ -89,6 +89,7 @@ func (c *config) UnmarshalJSON(data []byte) error {
 		SourceMountMode   SourceMountMode `json:"sourceMountMode"`
 		OSFamily          OSFamily        `json:"osFamily"`
 		CPUArch           CPUArch         `json:"cpuArch"`
+		TimeoutSeconds    int64           `json:"timeout"`
 	}
 	type flatPipelineJob struct {
 		Name         string   `json:"name"`
@@ -147,6 +148,7 @@ func (c *config) UnmarshalJSON(data []byte) error {
 			sourceMountMode:   flatJob.SourceMountMode,
 			osFamily:          flatJob.OSFamily,
 			cpuArch:           flatJob.CPUArch,
+			timeoutSeconds:    flatJob.TimeoutSeconds,
 		}
 		if job.sourceMountMode == "" {
 			job.sourceMountMode = SourceMountModeReadOnly

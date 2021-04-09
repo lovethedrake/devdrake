@@ -52,7 +52,12 @@ type Job interface {
 	OSFamily() OSFamily
 	// CPUArch returns the job's CPU architecture
 	CPUArch() CPUArch
+	// TimeoutSeconds returns the maximum number of seconds to wait for the job to complete.
+	// An empty (zero) value disables the timeout.
+	TimeoutSeconds() int64
 }
+
+var _ Job = &job{}
 
 type job struct {
 	name              string
@@ -61,6 +66,7 @@ type job struct {
 	sourceMountMode   SourceMountMode
 	osFamily          OSFamily
 	cpuArch           CPUArch
+	timeoutSeconds    int64
 }
 
 func (j *job) Name() string {
@@ -90,4 +96,8 @@ func (j *job) OSFamily() OSFamily {
 
 func (j *job) CPUArch() CPUArch {
 	return j.cpuArch
+}
+
+func (j *job) TimeoutSeconds() int64 {
+	return j.timeoutSeconds
 }
