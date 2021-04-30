@@ -2,7 +2,7 @@ version: 2
 jobs:
   test:
     docker:
-      - image: circleci/golang:1.15
+      - image: brigadecore/go-tools:v0.1.0
     steps:
       - checkout
       - run: go run mage.go -v verifyVendor
