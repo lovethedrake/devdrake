@@ -42,8 +42,8 @@ github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+o
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2 h1:DB17ag19krx9CFsz4o3enTrPXyIXCl+2iCXH/aMAp9s=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
-github.com/lovethedrake/drakecore v0.14.1-0.20210416150621-c26e28475e89 h1:OT+ish+6D3bEzdBwH0F04VX5qZbgoi90u90s+2YjMpw=
-github.com/lovethedrake/drakecore v0.14.1-0.20210416150621-c26e28475e89/go.mod h1:eryKoUCvAqz+A7u/mZH+OiNOOopQlV5XuxDkLDXTI1k=
+github.com/lovethedrake/drakecore v0.14.1-0.20210430170705-ef9df763eab4 h1:ebO0SOrHEO2VLBkOudf/NDnHE8WJ8tHvcDpx4s0AeBU=
+github.com/lovethedrake/drakecore v0.14.1-0.20210430170705-ef9df763eab4/go.mod h1:eryKoUCvAqz+A7u/mZH+OiNOOopQlV5XuxDkLDXTI1k=
 github.com/magefile/mage v1.11.0 h1:C/55Ywp9BpgVVclD3lRnSYCwXTYxmSppIgLeDYlNuls=
 github.com/magefile/mage v1.11.0/go.mod h1:z5UZb/iS3GoOSn0JgWuiw7dxlurVYTu+/jHXqQg881A=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=

@@ -1,0 +1,17 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/golang:1.15
+    steps:
+      - checkout
+      - run: go run mage.go -v verifyVendor
+      - run: go run mage.go -v test
+      - run: bash <(curl -s https://codecov.io/bash)
+      - run: go run mage.go -v lint
+
+workflows:
+  version: 2
+  build-workflow:
+    jobs:
+      - test

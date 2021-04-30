@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gotestyourself/gotestyourself v1.4.0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/lovethedrake/drakecore v0.14.1-0.20210416150621-c26e28475e89
+	github.com/lovethedrake/drakecore v0.14.1-0.20210430170705-ef9df763eab4
 	github.com/magefile/mage v1.11.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/morikuni/aec v1.0.0 // indirect
