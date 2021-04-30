@@ -1,5 +1,10 @@
 package config
 
+import (
+	"fmt"
+	"sort"
+)
+
 type ImagePullPolicy string
 
 const (
@@ -18,7 +23,7 @@ type Container interface {
 	// to refresh them by re-pulling
 	ImagePullPolicy() ImagePullPolicy
 	// Environment returns container-specific environment variables
-	Environment() []string
+	Environment() map[string]string
 	// WorkingDirectory returns the container's working directory
 	WorkingDirectory() string
 	// Command returns the command (entrypoint) that should be run in the
@@ -45,19 +50,19 @@ type Container interface {
 }
 
 type container struct {
-	ContainerName           string          `json:"name"`
-	Img                     string          `json:"image"`
-	ImgPullPolicy           ImagePullPolicy `json:"imagePullPolicy"`
-	Env                     []string        `json:"environment"`
-	WorkDir                 string          `json:"workingDirectory"`
-	Cmd                     []string        `json:"command"`
-	Arguments               []string        `json:"args"`
-	IsTTY                   bool            `json:"tty"`
-	IsPrivileged            bool            `json:"privileged"`
-	ShouldMountDockerSocket bool            `json:"mountDockerSocket"`
-	SrcMountPath            string          `json:"sourceMountPath"`
-	SharedStrgMountPath     string          `json:"sharedStorageMountPath"`
-	Resourcez               *resources      `json:"resources"`
+	ContainerName           string            `json:"name"`
+	Img                     string            `json:"image"`
+	ImgPullPolicy           ImagePullPolicy   `json:"imagePullPolicy"`
+	Env                     map[string]string `json:"environment"`
+	WorkDir                 string            `json:"workingDirectory"`
+	Cmd                     []string          `json:"command"`
+	Arguments               []string          `json:"args"`
+	IsTTY                   bool              `json:"tty"`
+	IsPrivileged            bool              `json:"privileged"`
+	ShouldMountDockerSocket bool              `json:"mountDockerSocket"`
+	SrcMountPath            string            `json:"sourceMountPath"`
+	SharedStrgMountPath     string            `json:"sharedStorageMountPath"`
+	Resourcez               *resources        `json:"resources"`
 }
 
 func (c *container) Name() string {
@@ -75,13 +80,25 @@ func (c *container) ImagePullPolicy() ImagePullPolicy {
 	return c.ImgPullPolicy
 }
 
-func (c *container) Environment() []string {
+func (c *container) Environment() map[string]string {
 	// We don't want any alterations a caller may make to the slice we return to
 	// affect the containers's own Env slice, which we'd like to treat as
 	// immutable, so we return a COPY of that slice.
-	env := make([]string, len(c.Env))
-	copy(env, c.Env)
+	env := make(map[string]string, len(c.Env))
+	for k, v := range c.Env {
+		env[k] = v
+	}
 	return env
+}
+
+// EnvironmentMapToSlice converts a map of environment variables to a slice of KEY=VALUE pairs.
+func EnvironmentMapToSlice(env map[string]string) []string {
+	vars := make([]string, 0, len(env))
+	for k, v := range env {
+		vars = append(vars, fmt.Sprintf("%s=%s", k, v))
+	}
+	sort.Strings(vars)
+	return vars
 }
 
 func (c *container) WorkingDirectory() string {

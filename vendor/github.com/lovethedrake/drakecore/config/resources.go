@@ -10,8 +10,10 @@ type Resources interface {
 
 type resources struct {
 	// Getting creative with spelling to avoid field/func name clashes
-	CPUU    *cpu    `json:"cpu"`
-	Memorie *memory `json:"memory"`
+	CPUU *cpu `json:"cpu"`
+	// This misspelling is deliberate to differentiate the property name from
+	// the function name.
+	Memorie *memory `json:"memory"` // nolint: misspell
 }
 
 func (r *resources) CPU() CPU {

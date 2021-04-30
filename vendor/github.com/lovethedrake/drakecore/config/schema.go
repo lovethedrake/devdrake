@@ -70,9 +70,9 @@ var jsonSchemaBytes = []byte(`
 					"enum": [ "IfNotPresent", "Always" ]
 				},
 				"environment": {
-					"type": "array",
-					"description": "A list of key=value pairs to be exposed as environment variables within the container",
-					"items": {
+					"type": "object",
+					"description": "A map of key/value pairs to be exposed as environment variables within the container",
+					"additionalProperties": {
 						"type": "string"
 					}
 				},
