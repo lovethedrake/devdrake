@@ -66,7 +66,7 @@ func main() {
 				cli.StringFlag{
 					Name:  flagsSecretsFile,
 					Usage: "specify the location of drake secrets",
-					Value: "Drakesecrets",
+					Value: "Drakesecrets.yaml",
 				},
 			},
 			Action: run,

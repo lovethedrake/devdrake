@@ -13,7 +13,7 @@ type Executor interface {
 	ExecutePipeline(
 		ctx context.Context,
 		pipeline config.Pipeline,
-		secrets []string,
+		secrets map[string]string,
 		maxConcurrency int,
 	) error
 }

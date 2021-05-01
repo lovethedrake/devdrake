@@ -13,7 +13,7 @@ import (
 func (e *executor) ExecutePipeline(
 	ctx context.Context,
 	pipeline config.Pipeline,
-	secrets []string,
+	secrets map[string]string,
 	maxConcurrency int,
 ) error {
 	ctx, cancel := context.WithCancel(ctx)

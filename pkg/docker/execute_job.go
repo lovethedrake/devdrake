@@ -23,7 +23,7 @@ const (
 
 func (e *executor) executeJob(
 	ctx context.Context,
-	secrets []string,
+	secrets map[string]string,
 	jobExecutionName string,
 	sourcePath string,
 	sharedStorageVolumeName string,
@@ -243,7 +243,7 @@ func (e *executor) executeJob(
 // does not start the container.
 func (e *executor) createContainer(
 	ctx context.Context,
-	secrets []string,
+	secrets map[string]string,
 	jobExecutionName string,
 	sourcePath string,
 	sourceMountMode config.SourceMountMode,
@@ -252,13 +252,18 @@ func (e *executor) createContainer(
 	osFamily config.OSFamily,
 	container config.Container,
 ) (string, error) {
-	env := make([]string, len(secrets))
-	copy(env, secrets)
-	env = append(env, config.EnvironmentMapToSlice(container.Environment())...)
+	env := secrets
+	if env == nil {
+		env = map[string]string{}
+	}
+	for k, v := range container.Environment() {
+		env[k] = v
+	}
+	envSlice := config.EnvironmentMapToSlice(container.Environment())
 
 	containerConfig := &dockerContainer.Config{
 		Image:        container.Image(),
-		Env:          env,
+		Env:          envSlice,
 		WorkingDir:   container.WorkingDirectory(),
 		Tty:          container.TTY(),
 		AttachStdout: true,
