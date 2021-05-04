@@ -10,6 +10,7 @@ require (
 	github.com/docker/docker v17.12.0-ce-rc1.0.20190515023440-de6df469f1be+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
+	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gotestyourself/gotestyourself v1.4.0 // indirect
@@ -24,6 +25,7 @@ require (
 	github.com/opencontainers/runtime-spec v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.4.2 // indirect
+	github.com/stretchr/testify v1.6.1
 	github.com/technosophos/moniker v0.0.0-20180509230615-a5dbd03a2245
 	github.com/urfave/cli v1.20.0
 	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
