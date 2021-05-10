@@ -33,6 +33,11 @@ func TestResolveEnvVars(t *testing.T) {
 			expectedResult: "foobar",
 		},
 		{
+			name:           "same substitution more than once",
+			input:          "${SUB}${SUB}",
+			expectedResult: "foofoo",
+		},
+		{
 			name: "multiple substitutions",
 			setup: func() {
 				os.Setenv("SUB1", "foo")
