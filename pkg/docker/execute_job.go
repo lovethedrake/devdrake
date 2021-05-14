@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"sort"
 
 	dockerTypes "github.com/docker/docker/api/types"
 	dockerContainer "github.com/docker/docker/api/types/container"
@@ -483,4 +484,15 @@ func millicoresToCPUPercentWindows(millicores int64, hyperv bool) int64 {
 	}
 	// return cpuMaximum
 	return cpuPercent
+}
+
+// environmentMapToSlice converts a map of environment variables to a slice of
+// KEY=VALUE pairs.
+func environmentMapToSlice(env map[string]string) []string {
+	vars := make([]string, 0, len(env))
+	for k, v := range env {
+		vars = append(vars, fmt.Sprintf("%s=%s", k, v))
+	}
+	sort.Strings(vars)
+	return vars
 }
