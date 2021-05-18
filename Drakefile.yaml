@@ -6,8 +6,8 @@ snippets:
   baseGoContainer: &baseGoContainer
     name: go
     image: brigadecore/go-tools:v0.1.0
-    sourceMountPath: /devdrake
-    workingDirectory: /devdrake
+    sourceMountPath: /mallard
+    workingDirectory: /mallard
     tty: true
     resources:
       cpu:

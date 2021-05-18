@@ -4,17 +4,16 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lovethedrake/devdrake/pkg/version"
 	"github.com/lovethedrake/drakecore/config"
+	"github.com/lovethedrake/mallard/pkg/version"
 	"github.com/urfave/cli"
 )
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "DevDrake"
-	app.HelpName = "drake"
-	app.Usage = "execute DrakeSpec-compliant jobs and pipelines using the " +
-		"local Docker daemon"
+	app.Name = "Mallard"
+	app.HelpName = "mallard"
+	app.Usage = "execute Drake jobs and pipelines using the local Docker daemon"
 	app.Version = version.Version()
 	if version.Commit() != "" {
 		app.Version = fmt.Sprintf("%s+%s", app.Version, version.Commit())
@@ -27,7 +26,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  flagsFile,
-			Usage: "specify the location of drake configuration",
+			Usage: "specify the location of configuration",
 			Value: "Drakefile.yaml",
 		},
 	}

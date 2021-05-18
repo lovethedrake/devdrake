@@ -1,4 +1,4 @@
-module github.com/lovethedrake/devdrake
+module github.com/lovethedrake/mallard
 
 go 1.15
 

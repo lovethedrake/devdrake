@@ -12,8 +12,8 @@ import (
 	dockerContainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/docker/pkg/sysinfo"
-	"github.com/lovethedrake/devdrake/pkg/file"
 	"github.com/lovethedrake/drakecore/config"
+	"github.com/lovethedrake/mallard/pkg/file"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 )
@@ -53,13 +53,13 @@ func (e *executor) executeJob(
 				return errors.Wrap(err, "error finding home directory")
 			}
 			// TODO: Move this into its own package? This probably won't be the last
-			// time we need to find "devdrakeHome".
-			jobPath := path.Join(homePath, ".devdrake", "jobs", jobExecutionName)
+			// time we need to find "mallard home".
+			jobPath := path.Join(homePath, ".mallard", "jobs", jobExecutionName)
 			if _, err := os.Stat(jobPath); err != nil {
 				if !os.IsNotExist(err) {
 					return errors.Wrapf(
 						err,
-						"error checkiong for existence of directory %s",
+						"error checking for existence of directory %s",
 						jobPath,
 					)
 				}

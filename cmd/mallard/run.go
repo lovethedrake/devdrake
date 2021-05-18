@@ -4,9 +4,9 @@ import (
 	"path/filepath"
 
 	docker "github.com/docker/docker/client"
-	drakeDocker "github.com/lovethedrake/devdrake/pkg/docker"
-	"github.com/lovethedrake/devdrake/pkg/signals"
 	"github.com/lovethedrake/drakecore/config"
+	libDocker "github.com/lovethedrake/mallard/pkg/docker"
+	"github.com/lovethedrake/mallard/pkg/signals"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )
@@ -38,7 +38,7 @@ func run(c *cli.Context) error {
 	}
 
 	// TODO: Should pass the stream that we want output to go to-- stdout
-	executor := drakeDocker.NewExecutor(sourcePath, dockerClient, debugOnly)
+	executor := libDocker.NewExecutor(sourcePath, dockerClient, debugOnly)
 	if c.Bool(flagPipeline) {
 		if len(c.Args()) == 0 {
 			return errors.New("no pipeline was specified for execution")
@@ -63,7 +63,7 @@ func run(c *cli.Context) error {
 	}
 	return executor.ExecutePipeline(
 		ctx,
-		drakeDocker.NewAdHocPipeline(jobs),
+		libDocker.NewAdHocPipeline(jobs),
 		secrets,
 		maxConcurrency,
 	)
