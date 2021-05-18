@@ -20,13 +20,13 @@ import (
 // the build immediately when the command fails.
 var must = shx.CommandBuilder{StopOnError: true}
 
-// Compile the drake CLI with Docker
+// Compile the mallard CLI with Docker
 func Build() {
 	pwd, _ := os.Getwd()
 	must.RunV("docker", "run", "--rm",
-		"-v", pwd+":/go/src/github.com/lovethedrake/devdrake",
-		"-w", "/go/src/github.com/lovethedrake/devdrake",
-		"-v", pwd+"/bin:/shared/bin/drake",
+		"-v", pwd+":/go/src/github.com/lovethedrake/mallard",
+		"-w", "/go/src/github.com/lovethedrake/mallard",
+		"-v", pwd+"/bin:/shared/bin",
 		"brigadecore/go-tools:v0.1.0", "scripts/build.sh", runtime.GOOS, runtime.GOARCH)
 }
 
