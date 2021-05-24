@@ -4,7 +4,7 @@ package config
 var jsonSchemaBytes = []byte(`
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "github.com/lovethedrake/drakecore/config.schema.json",
+	"$id": "github.com/lovethedrake/go-drake/config.schema.json",
 	
 	"definitions": {
 
