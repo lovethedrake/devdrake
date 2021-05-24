@@ -33,7 +33,7 @@ const (
 
 	// Note that there are a lot of different CPU architectures supported by
 	// OCI container runtimes and it was a conscious choice to only enumerate the
-	// default here and not attempt to enumerate all of them. Users of DrakeCore
+	// default here and not attempt to enumerate all of them. Users of go-drake
 	// should use string literals cast as CPUArch to reference alternative
 	// architectures.
 )

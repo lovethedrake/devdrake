@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	volumetypes "github.com/docker/docker/api/types/volume"
-	"github.com/lovethedrake/drakecore/config"
+	"github.com/lovethedrake/go-drake/config"
 	"github.com/pkg/errors"
 )
 

@@ -13,7 +13,7 @@ import (
 
 	// Import shared mage targets for drake
 	// mage:import
-	"github.com/lovethedrake/drakecore/mage"
+	"github.com/lovethedrake/go-drake/mage"
 )
 
 // Any commands executed by "must" (as opposed to shx.RunV for example), will stop

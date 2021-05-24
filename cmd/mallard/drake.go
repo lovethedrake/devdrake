@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lovethedrake/drakecore/config"
+	"github.com/lovethedrake/go-drake/config"
 	"github.com/lovethedrake/mallard/pkg/version"
 	"github.com/urfave/cli"
 )

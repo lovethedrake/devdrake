@@ -12,7 +12,7 @@ import (
 	dockerContainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/docker/pkg/sysinfo"
-	"github.com/lovethedrake/drakecore/config"
+	"github.com/lovethedrake/go-drake/config"
 	"github.com/lovethedrake/mallard/pkg/file"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
@@ -260,7 +260,7 @@ func (e *executor) createContainer(
 	for k, v := range container.Environment() {
 		env[k] = v
 	}
-	envSlice := config.EnvironmentMapToSlice(container.Environment())
+	envSlice := environmentMapToSlice(container.Environment())
 
 	containerConfig := &dockerContainer.Config{
 		Image:        container.Image(),

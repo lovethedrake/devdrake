@@ -9,7 +9,7 @@ import (
 	dockerTypes "github.com/docker/docker/api/types"
 	docker "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
-	"github.com/lovethedrake/drakecore/config"
+	"github.com/lovethedrake/go-drake/config"
 )
 
 func (e *executor) shouldPull(

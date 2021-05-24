@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"sort"
-)
-
 type ImagePullPolicy string
 
 const (
@@ -89,16 +84,6 @@ func (c *container) Environment() map[string]string {
 		env[k] = v
 	}
 	return env
-}
-
-// EnvironmentMapToSlice converts a map of environment variables to a slice of KEY=VALUE pairs.
-func EnvironmentMapToSlice(env map[string]string) []string {
-	vars := make([]string, 0, len(env))
-	for k, v := range env {
-		vars = append(vars, fmt.Sprintf("%s=%s", k, v))
-	}
-	sort.Strings(vars)
-	return vars
 }
 
 func (c *container) WorkingDirectory() string {

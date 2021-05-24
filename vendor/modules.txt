@@ -70,10 +70,10 @@ github.com/golang/protobuf/ptypes/timestamp
 # github.com/konsorten/go-windows-terminal-sequences v1.0.2
 ## explicit
 github.com/konsorten/go-windows-terminal-sequences
-# github.com/lovethedrake/drakecore v0.14.1-0.20210430170705-ef9df763eab4
+# github.com/lovethedrake/go-drake v0.15.0
 ## explicit
-github.com/lovethedrake/drakecore/config
-github.com/lovethedrake/drakecore/mage
+github.com/lovethedrake/go-drake/config
+github.com/lovethedrake/go-drake/mage
 # github.com/magefile/mage v1.11.0
 ## explicit
 github.com/magefile/mage/internal
