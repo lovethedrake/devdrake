@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 
 	docker "github.com/docker/docker/client"
-	"github.com/lovethedrake/drakecore/config"
+	"github.com/lovethedrake/go-drake/config"
 	libDocker "github.com/lovethedrake/mallard/pkg/docker"
 	"github.com/lovethedrake/mallard/pkg/signals"
 	"github.com/pkg/errors"

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	docker "github.com/docker/docker/client"
-	"github.com/lovethedrake/drakecore/config"
+	"github.com/lovethedrake/go-drake/config"
 	"github.com/technosophos/moniker"
 )
 

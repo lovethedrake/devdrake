@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/lovethedrake/drakecore/config"
+	"github.com/lovethedrake/go-drake/config"
 	"github.com/urfave/cli"
 )
 

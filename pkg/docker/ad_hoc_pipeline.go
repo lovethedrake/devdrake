@@ -1,6 +1,6 @@
 package docker
 
-import "github.com/lovethedrake/drakecore/config"
+import "github.com/lovethedrake/go-drake/config"
 
 type adHocPipeline struct {
 	jobs []config.PipelineJob
